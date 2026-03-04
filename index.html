@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Number Reader</title>
+    <link rel="stylesheet" href="templates/css/styles.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>Infinite Number Reader</h1>
+        <p class="hint">Try: 1e1920, 1Qa, 388Qn</p>
+
+        <form id="reader-form" class="reader-form">
+            <label for="notation-input">Number notation</label>
+            <input id="notation-input" name="notation" type="text" placeholder="e.g. 1e1920 or 388Qn" required>
+            <button type="submit">Convert</button>
+        </form>
+
+        <pre id="reader-output" class="output">Input: -
+Exponent (base 10): -
+Readable: -</pre>
+    </main>
+
+    <script src="templates/js/scripts.js"></script>
+</body>
+
+</html>
