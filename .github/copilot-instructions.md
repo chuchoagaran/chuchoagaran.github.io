@@ -40,3 +40,6 @@
 - Do not introduce `eval`, dynamic script injection, or untrusted HTML insertion when parsing user-entered number strings.
 - Validate and sanitize input formats before conversion logic (scientific notation, suffix notation).
 - Keep third-party code provenance clear when importing/adapting external snippets; note source in `README.md`.
+
+# Version number
+- when user agreed to update version he will up manually or ask ai again

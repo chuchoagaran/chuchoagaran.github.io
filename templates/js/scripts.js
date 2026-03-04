@@ -6,13 +6,29 @@ class InfiniteNumberFormatter {
             "Quintillion", "Sextillion", "Septillion", "Octillion", "Nonillion"
         ];
 
+        this.shortSuffixes = ["K", "M", "B"];
+        this.firstOnes = ["", "U", "D", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No"];
+        this.secondOnes = ["", "De", "Vt", "Tg", "qg", "Qg", "sg", "Sg", "Og", "Ng"];
+        this.thirdOnes = ["", "Ce", "Du", "Tr", "Qa", "Qi", "Se", "Si", "Ot", "Ni"];
+
         // Tier 1: The standard Conway-Guy system (up to index 999)
         this.units = ["", "Un", "Duo", "Tre", "Quattuor", "Quin", "Sex", "Septen", "Octo", "Novem"];
         this.tens = ["", "Deci", "Viginti", "Triginta", "Quadraginta", "Quinquaginta", "Sexaginta", "Septuaginta", "Octoginta", "Nonaginta"];
         this.hundreds = ["", "Centi", "Ducenti", "Trecenti", "Quadringenti", "Quingenti", "Sescenti", "Septingenti", "Octingenti", "Nongenti"];
 
-        // Tier 2: For indices 1000+ (Millions of groups)
-        this.tier2 = ["", "Milli", "Micri", "Nanoni", "Picco", "Femto", "Atto", "Zepto"];
+        // Tier 2+: prefixes inspired by ETERNITYNUM.LUA MultOnes table
+        this.tier2 = [
+            "", "Mi", "Mc", "Na", "Pi", "Fm", "At", "Zp", "Yc", "Xo", "Ve", "Me",
+            "Due", "Tre", "Te", "Pt", "He", "Hp", "Oct", "En", "Ic", "Mei",
+            "Dui", "Tri", "Teti", "Pti", "Hei", "Hp", "Oci", "Eni", "Tra", "TeC",
+            "MTc", "DTc", "TrTc", "TeTc", "PeTc", "HTc", "HpT", "OcT", "EnT", "TetC",
+            "MTetc", "DTetc", "TrTetc", "TeTetc", "PeTetc", "HTetc", "HpTetc", "OcTetc", "EnTetc", "PcT",
+            "MPcT", "DPcT", "TPCt", "TePCt", "PePCt", "HePCt", "HpPct", "OcPct", "EnPct", "HCt",
+            "MHcT", "DHcT", "THCt", "TeHCt", "PeHCt", "HeHCt", "HpHct", "OcHct", "EnHct", "HpCt",
+            "MHpcT", "DHpcT", "THpCt", "TeHpCt", "PeHpCt", "HeHpCt", "HpHpct", "OcHpct", "EnHpct",
+            "OCt", "MOcT", "DOcT", "TOCt", "TeOCt", "PeOCt", "HeOCt", "HpOct", "OcOct", "EnOct", "Ent", "MEnT",
+            "DEnT", "TEnt", "TeEnt", "PeEnt", "HeEnt", "HpEnt", "OcEnt", "EnEnt", "Hect", "MeHect"
+        ];
     }
 
     // Handles the core 10 to 999 combinations
@@ -34,7 +50,7 @@ class InfiniteNumberFormatter {
             name = name.slice(0, -1);
         }
 
-        return name + "llion";
+        return name + "illion";
     }
 
     // Handles going "Infinite" by combining Tier 2 with Tier 1
@@ -51,11 +67,22 @@ class InfiniteNumberFormatter {
         let t1Index = index % 1000;
         let t2Index = Math.floor(index / 1000);
 
-        let t2Prefix = this.tier2[t2Index] || `Tier${t2Index}-`;
-        let t1Prefix = t1Index === 0 ? "llion" : this.getTier1Name(t1Index).toLowerCase();
+        const t2Prefix = this.tier2[t2Index] || `Tier${t2Index}`;
 
-        // Connect them smoothly
-        return t2Prefix + (t1Index === 0 ? t1Prefix : "-" + t1Prefix);
+        // t1Index 0 → pure tier2 word (e.g. "Millillion")
+        // t1Index 1 → tier2 + "million" (first named illion)
+        // t1Index 2+ → full Conway-Guy name
+        let t1Suffix;
+        if (t1Index === 0) {
+            t1Suffix = "illion";
+        } else if (t1Index === 1) {
+            t1Suffix = "million";
+        } else {
+            t1Suffix = this.getTier1Name(t1Index).toLowerCase();
+        }
+
+        if (!t2Prefix) return t1Suffix;
+        return `${t2Prefix}-${t1Suffix}`;
     }
 
     buildReadableText(mantissa, exponent) {
@@ -65,6 +92,76 @@ class InfiniteNumberFormatter {
 
         const name = this.getFullNameFromExponent(exponent);
         return `${mantissa} ${name}`;
+    }
+
+    getSmallSuffixChunk(index) {
+        const hundreds = Math.floor(index / 100);
+        const tens = Math.floor((index % 100) / 10);
+        const ones = index % 10;
+
+        return `${this.firstOnes[ones]}${this.secondOnes[tens]}${this.thirdOnes[hundreds]}`;
+    }
+
+    getLargeSuffixChunk(index) {
+        let adjusted = index;
+        if (adjusted > 0) {
+            adjusted += 1;
+        }
+        if (adjusted > 1000) {
+            adjusted %= 1000;
+        }
+        return this.getSmallSuffixChunk(adjusted);
+    }
+
+    getLuaStyleAbbreviationSuffix(exponent) {
+        if (exponent < 3) {
+            return "";
+        }
+
+        let suffixIndex = Math.floor(exponent / 3) - 1;
+
+        if (suffixIndex < 0) {
+            return "";
+        }
+
+        if (suffixIndex < this.shortSuffixes.length) {
+            return this.shortSuffixes[suffixIndex];
+        }
+
+        if (suffixIndex < 1000) {
+            return this.getSmallSuffixChunk(suffixIndex);
+        }
+
+        const originalIndex = suffixIndex;
+        let out = "";
+        const maxGroup = Math.floor(Math.log10(suffixIndex) / 3);
+
+        for (let i = maxGroup; i >= 0; i--) {
+            const groupDivisor = 10 ** (i * 3);
+
+            if (suffixIndex >= groupDivisor) {
+                const part = Math.floor(suffixIndex / groupDivisor) - 1;
+                out += this.getLargeSuffixChunk(part);
+                out += this.tier2[i] || `T${i}`;
+                suffixIndex %= groupDivisor;
+            }
+        }
+
+        return out || `T${originalIndex}`;
+    }
+
+    getAbbreviationFromExponent(exponent) {
+        return this.getLuaStyleAbbreviationSuffix(exponent);
+    }
+
+    buildAbbreviationText(mantissa, exponent) {
+        const suffix = this.getAbbreviationFromExponent(exponent);
+
+        if (!suffix) {
+            return `${mantissa}`;
+        }
+
+        return `${mantissa} ${suffix}`;
     }
 
     parseNotationInput(rawInput) {
@@ -151,7 +248,8 @@ class InfiniteNumberFormatter {
             ok: true,
             normalized: parsed.normalized,
             exponent: parsed.exponent,
-            fullText: this.buildReadableText(parsed.mantissa, parsed.exponent)
+            fullText: this.buildReadableText(parsed.mantissa, parsed.exponent),
+            abbreviation: this.buildAbbreviationText(parsed.mantissa, parsed.exponent)
         };
     }
 
@@ -182,7 +280,8 @@ function setupMiniReader() {
         output.textContent = [
             `Input: ${result.normalized}`,
             `Exponent (base 10): ${result.exponent}`,
-            `Readable: ${result.fullText}`
+            `Readable: ${result.fullText}`,
+            `Abbviration: ${result.abbreviation}`
         ].join("\n");
     };
 
