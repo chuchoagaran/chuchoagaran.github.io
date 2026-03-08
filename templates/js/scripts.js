@@ -35,9 +35,10 @@ class InfiniteNumberFormatter {
     getTier1Name(index) {
         if (index <= 10) return this.basics[index] || "Decillion";
 
-        let u = index % 10;
-        let t = Math.floor(index / 10) % 10;
-        let h = Math.floor(index / 100) % 10;
+        let n = index - 1;
+        let u = n % 10;
+        let t = Math.floor(n / 10) % 10;
+        let h = Math.floor(n / 100) % 10;
 
         // Slap them together: Units + Tens + Hundreds
         let name = this.units[u] + this.tens[t] + this.hundreds[h];
@@ -86,12 +87,15 @@ class InfiniteNumberFormatter {
     }
 
     buildReadableText(mantissa, exponent) {
+        let displayMantissa = mantissa * (10 ** (exponent % 3));
+        displayMantissa = Math.round(displayMantissa * 1000) / 1000; // avoid floating point issues
+
         if (exponent < 3) {
-            return `${mantissa} (under a thousand)`;
+            return `${displayMantissa} (under a thousand)`;
         }
 
         const name = this.getFullNameFromExponent(exponent);
-        return `${mantissa} ${name}`;
+        return `${displayMantissa} ${name}`;
     }
 
     getSmallSuffixChunk(index) {
@@ -155,13 +159,16 @@ class InfiniteNumberFormatter {
     }
 
     buildAbbreviationText(mantissa, exponent) {
+        let displayMantissa = mantissa * (10 ** (exponent % 3));
+        displayMantissa = Math.round(displayMantissa * 1000) / 1000; // avoid floating point issues
+
         const suffix = this.getAbbreviationFromExponent(exponent);
 
         if (!suffix) {
-            return `${mantissa}`;
+            return `${displayMantissa}`;
         }
 
-        return `${mantissa} ${suffix}`;
+        return `${displayMantissa} ${suffix}`;
     }
 
     parseNotationInput(rawInput) {
