@@ -1,14 +1,16 @@
-# infinite number reader
+# Infinite Number Reader
 
-infinite number to text by gemini and reference Antimatter dimension's infinite number scripts, and Everything upgrade tree (ROBLOX) script
-PURPOSE:USER ENTER NUMBER LIKE 1Qa 388Qn ... or sceientific 1e1920 etc then we convert and be able to  READ INFINITE NUMBER IN FULL TEXT (REFERENCE: GEOLOGOY WIKI <https://googology.fandom.com/wiki/Googology_Wiki?referrer=grok.com)AND> AS WELL AS NOTATION,
+Convert very large numbers to readable text and notation.
 
-## frameworks
+**Purpose:** Users enter numbers like `1Qa`, `388Qn`, or scientific notation `1e1920`, which are then converted to full text representation and standard notation for readability. References [Googology Wiki](https://googology.fandom.com/wiki/Googology_Wiki) naming conventions.
 
-- HTML, CSS,JS if can add vue whatever OK
-- deploy: github page
-- use typescript if can, but not necessary
-- reference scripts: Antimatter dimension's infinite number scripts, and Everything upgrade tree (ROBLOX) script
-Antimatter dimensiton's infinite number script: /github.com/IvarK/AntimatterDimensionsSourceCode src/core
-/notations.js
-roblox everything upgrade tree script: <https://www.roblox.com/games/114296488480546/Upgrade-Tree-Tutorial> credit: <https://www.roblox.com/users/2359603031/profile/>
+**Mini Purpose:**
+This tool reads numbers so absurdly large they "make no fucking sense." If you've played Roblox or Antimatter Dimensions, you might wonder how something like `1e1849` is read or abbreviated. Quick-check such values here; only `XeY` scientific format is supported.
+
+## Tech Stack
+
+- **Frontend:** HTML, CSS, JavaScript
+- **Deployment:** GitHub Pages
+- **Reference implementations:**
+  - [Antimatter Dimensions notations](https://github.com/IvarK/AntimatterDimensionsSourceCode) (src/core/notations.js)
+  - [Roblox Everything Upgrade Tree](https://www.roblox.com/games/114296488480546/Upgrade-Tree-Tutorial)
