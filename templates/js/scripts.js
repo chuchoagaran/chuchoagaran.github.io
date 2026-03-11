@@ -29,6 +29,10 @@ class InfiniteNumberFormatter {
             "OCt", "MOcT", "DOcT", "TOCt", "TeOCt", "PeOCt", "HeOCt", "HpOct", "OcOct", "EnOct", "Ent", "MEnT",
             "DEnT", "TEnt", "TeEnt", "PeEnt", "HeEnt", "HpEnt", "OcEnt", "EnEnt", "Hect", "MeHect"
         ];
+
+        // Latin ones-place prefixes for building milli-tier compound names
+        // e.g. index 2 → "du" + "milli" = "dumilli" → "Dumillillion"
+        this.milliOnes = ["", "un", "du", "tri", "quadri", "quin", "sex", "septi", "octi", "noni"];
     }
 
     // Handles the core 10 to 999 combinations
@@ -54,47 +58,82 @@ class InfiniteNumberFormatter {
         return name + "illion";
     }
 
+    // Builds the Latin prefix for a tier-2 index (e.g. 2 → "dumilli", 41 → "unquadragintamilli")
+    getMilliPrefix(t2Index) {
+        if (t2Index <= 0) return "";
+        if (t2Index === 1) return "milli";
+        if (t2Index < 10) return this.milliOnes[t2Index] + "milli";
+
+        // Compose ones+tens+hundreds for t2Index >= 10
+        let o = t2Index % 10;
+        let t = Math.floor(t2Index / 10) % 10;
+        let h = Math.floor(t2Index / 100) % 10;
+
+        let prefix = this.milliOnes[o]
+            + this.tens[t].toLowerCase()
+            + this.hundreds[h].toLowerCase();
+
+        // Clean up double vowels
+        prefix = prefix.replace(/ii/g, "i").replace(/aa/g, "a");
+
+        return prefix + "milli";
+    }
+
     // Handles going "Infinite" by combining Tier 2 with Tier 1
     getFullNameFromExponent(exponent) {
         if (exponent < 3) return "Under a Thousand";
 
-        // Calculate the illion index (e.g., 10^6 -> 2 = Million)
-        let index = Math.floor(exponent / 3);
+        // suffixIndex = group - 1
+        // e.g. 10^3 → 0 (Thousand), 10^6 → 1 (Million), 10^3003 → 1000 (Millillion)
+        let suffixIndex = Math.floor(exponent / 3) - 1;
 
-        // If under 1000, just use Tier 1
-        if (index < 1000) return this.getTier1Name(index);
+        if (suffixIndex < 0) return "Under a Thousand";
 
-        // If 1000 or over, bring in Tier 2
-        let t1Index = index % 1000;
-        let t2Index = Math.floor(index / 1000);
+        // Under 1000: standard tier-1 names
+        if (suffixIndex < 1000) return this.getTier1Name(suffixIndex + 1);
 
-        const t2Prefix = this.tier2[t2Index] || `Tier${t2Index}`;
+        // 1000 or over: split into tier-2 prefix + tier-1 suffix
+        let t1Index = suffixIndex % 1000;
+        let t2Index = Math.floor(suffixIndex / 1000);
 
-        // t1Index 0 → pure tier2 word (e.g. "Millillion")
-        // t1Index 1 → tier2 + "million" (first named illion)
-        // t1Index 2+ → full Conway-Guy name
-        let t1Suffix;
+        const prefix = this.getMilliPrefix(t2Index);
+
+        // t1Index 0 → pure tier2 word: "milli"+"llion" = "millillion"
+        // t1Index 1+ → tier2 + tier1 name: "milli"+"million" = "millimillion"
+        let suffix;
         if (t1Index === 0) {
-            t1Suffix = "illion";
-        } else if (t1Index === 1) {
-            t1Suffix = "million";
+            suffix = "llion";
         } else {
-            t1Suffix = this.getTier1Name(t1Index).toLowerCase();
+            suffix = this.getTier1Name(t1Index + 1).toLowerCase();
         }
 
-        if (!t2Prefix) return t1Suffix;
-        return `${t2Prefix}-${t1Suffix}`;
+        const name = prefix + suffix;
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+
+    normalizeDisplayValue(mantissa, exponent) {
+        let adjustedExponent = exponent;
+        let displayMantissa = mantissa * (10 ** (adjustedExponent % 3));
+
+        // Keep display mantissa in [1, 1000) by carrying powers of 1000 into exponent.
+        while (Math.abs(displayMantissa) >= 1000) {
+            displayMantissa /= 1000;
+            adjustedExponent += 3;
+        }
+
+        return { displayMantissa, exponent: adjustedExponent };
     }
 
     buildReadableText(mantissa, exponent) {
-        let displayMantissa = mantissa * (10 ** (exponent % 3));
+        const normalized = this.normalizeDisplayValue(mantissa, exponent);
+        let displayMantissa = normalized.displayMantissa;
         displayMantissa = Math.round(displayMantissa * 1000) / 1000; // avoid floating point issues
 
-        if (exponent < 3) {
+        if (normalized.exponent < 3) {
             return `${displayMantissa} (under a thousand)`;
         }
 
-        const name = this.getFullNameFromExponent(exponent);
+        const name = this.getFullNameFromExponent(normalized.exponent);
         return `${displayMantissa} ${name}`;
     }
 
@@ -144,10 +183,17 @@ class InfiniteNumberFormatter {
             const groupDivisor = 10 ** (i * 3);
 
             if (suffixIndex >= groupDivisor) {
-                const part = Math.floor(suffixIndex / groupDivisor) - 1;
-                out += this.getLargeSuffixChunk(part);
-                out += this.tier2[i] || `T${i}`;
-                suffixIndex %= groupDivisor;
+                if (i === 0) {
+                    // Lowest group: use direct suffix to avoid SuffixPartTwo(0) → empty ambiguity
+                    out += this.getSmallSuffixChunk(suffixIndex);
+                    suffixIndex = 0;
+                } else {
+                    const part = Math.floor(suffixIndex / groupDivisor) - 1;
+                    out += this.getLargeSuffixChunk(part);
+                    const tier2Token = this.tier2[i];
+                    out += tier2Token !== undefined ? tier2Token : `T${i}`;
+                    suffixIndex %= groupDivisor;
+                }
             }
         }
 
@@ -159,10 +205,11 @@ class InfiniteNumberFormatter {
     }
 
     buildAbbreviationText(mantissa, exponent) {
-        let displayMantissa = mantissa * (10 ** (exponent % 3));
+        const normalized = this.normalizeDisplayValue(mantissa, exponent);
+        let displayMantissa = normalized.displayMantissa;
         displayMantissa = Math.round(displayMantissa * 1000) / 1000; // avoid floating point issues
 
-        const suffix = this.getAbbreviationFromExponent(exponent);
+        const suffix = this.getAbbreviationFromExponent(normalized.exponent);
 
         if (!suffix) {
             return `${displayMantissa}`;

@@ -14,3 +14,5 @@ This tool reads numbers so absurdly large they "make no fucking sense." If you'v
 - **Reference implementations:**
   - [Antimatter Dimensions notations](https://github.com/IvarK/AntimatterDimensionsSourceCode) (src/core/notations.js)
   - [Roblox Everything Upgrade Tree](https://www.roblox.com/games/114296488480546/Upgrade-Tree-Tutorial)
+  
+  - geolology wiki <https://googology.fandom.com/wiki/Googology_Wiki>
