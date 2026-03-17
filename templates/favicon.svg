@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+  <path 
+    d="M40,50 
+       C40,20 80,20 100,50 
+       C120,80 160,80 160,50
+       C160,20 120,20 100,50
+       C80,80 40,80 40,50 Z"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+</svg>
