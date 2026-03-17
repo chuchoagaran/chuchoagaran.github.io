@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Coin Clicker</title>
+    <!-- Use the existing style for consistency, plus game specific styles -->
+    <link rel="icon" type="image/svg+xml" href="templates/favicon.svg">
+    <link rel="stylesheet" href="templates/css/styles.css">
+    <link rel="stylesheet" href="templates/css/game.css">
+</head>
+
+<body>
+    <main class="container">
+        <h1>Infinite Coin Clicker</h1>
+        <p class="purpose">
+            Click coins to generate absurdly large numbers! Powered by the custom Infinite Number Reader engine.
+            Made with Gemini 3.1 Pro.
+        </p>
+
+        <div class="stats-board">
+            <h2>Coins: <span id="coin-display" class="highlight-number">0</span></h2>
+            <h3>Multiplier: <span id="multi-display">x1</span></h3>
+            <h3>Coins/s: <span id="cps-display">0</span></h3>
+        </div>
+
+        <div class="click-area">
+            <button id="coin-button" class="coin-btn">💰 CLICK for coin! 💰</button>
+        </div>
+
+        <div class="shop-area">
+            <h2>Upgrades Shop</h2>
+
+            <div class="shop-columns" style="display: flex; gap: 1rem;">
+                <!-- Column 1: Additive -->
+                <div class="shop-column"
+                    style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch;">
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <span class="upgrade-title">Additive Multiplier</span><br />
+                        <span id="cost-plus" class="cost-text">Cost: 10 Coins</span>
+                    </div>
+                    <button id="buy-add-max-btn" class="shop-btn" style="padding: 25px 15px;">
+                        <span style="font-size: 1.4rem; font-weight: bold;">+ MAX</span>
+                        <span id="add-can-buy" style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Can
+                            buy: 0)</span>
+                    </button>
+                </div>
+
+                <!-- Column 2: Multiplicative -->
+                <div id="mult-section" class="shop-column"
+                    style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch;">
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <span class="upgrade-title">Multiplicative Multiplier</span><br />
+                        <span id="cost-times" class="cost-text">Cost: 100 Coins</span>
+                    </div>
+                    <button id="buy-mult-max-btn" class="shop-btn" style="padding: 25px 15px;">
+                        <span style="font-size: 1.4rem; font-weight: bold;">x MAX</span>
+                        <span id="mult-can-buy" style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Can
+                            buy: 0)</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="shop-columns" style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <!-- Column 3: Autoclicker Unlock -->
+                <div class="shop-column"
+                    style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch;">
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <span class="upgrade-title">Autoclicker</span><br />
+                        <span class="cost-text">Cost: 50,000 Coins</span>
+                        <br />
+                        <span id="auto-speed-display" style="font-size: 0.95rem; color: #4b5563;">Current Speed: 0.00
+                            Clicks/s</span>
+                    </div>
+                    <button id="buy-auto-btn" class="shop-btn" style="padding: 25px 15px;">
+                        <span style="font-size: 1.4rem; font-weight: bold;">Unlock</span>
+                        <span id="auto-owned-display"
+                            style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Not Owned)</span>
+                    </button>
+                </div>
+
+                <!-- Column 4: Stronger Autoclicker -->
+                <div id="stronger-auto-section" class="shop-column"
+                    style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; filter: blur(4px); pointer-events: none; opacity: 0.7;">
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <span class="upgrade-title">Stronger Autoclicker</span><br />
+                        <span id="cost-stronger-auto" class="cost-text">Cost: 50,000 Coins</span>
+                    </div>
+                    <button id="buy-stronger-auto-max-btn" class="shop-btn" style="padding: 25px 15px;">
+                        <span style="font-size: 1.4rem; font-weight: bold;">Upgrade MAX</span>
+                        <span id="stronger-auto-can-buy"
+                            style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Can buy: 0)
+                            +0.01 click/s</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="shop-area" style="margin-top: 2rem;">
+            <h2>Settings & Save</h2>
+            <div class="shop-items">
+                <!-- Save/Load/Export/Import -->
+                <button id="save-btn" class="shop-btn">Save Game</button>
+                <button id="export-btn" class="shop-btn">Export Save</button>
+                <button id="import-btn" class="shop-btn">Import Save</button>
+                <button id="hard-reset-btn" class="shop-btn"
+                    style="background-color: #ff4a4a; color: white; border-color: #cc0000;">Hard Reset</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 2rem;">
+            <a href="index.html" style="color: #61dafb;">Back to Number Reader Tool</a>
+        </div>
+    </main>
+
+    <!-- Load formatter logic first -->
+    <script src="templates/js/scripts.js"></script>
+    <!-- Load game state and logic -->
+    <script src="templates/js/game.js"></script>
+</body>
+
+</html>
