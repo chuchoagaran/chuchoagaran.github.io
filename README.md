@@ -16,3 +16,7 @@ This tool reads numbers so absurdly large they "make no fucking sense." If you'v
   - [Roblox Everything Upgrade Tree](https://www.roblox.com/games/114296488480546/Upgrade-Tree-Tutorial)
   
   - geolology wiki <https://googology.fandom.com/wiki/Googology_Wiki>
+
+## Support
+- Only supports `XeY` scientific notation input.
+- maximum supported number currently is 1e2999999 
