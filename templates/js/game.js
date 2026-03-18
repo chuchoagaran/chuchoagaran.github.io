@@ -108,7 +108,7 @@ function estimateMaxStrongerAutoExact() {
     let count = 0;
     let probeCoins = new BigNum(state.coins.mantissa, state.coins.exponent);
     let probeCost = new BigNum(state.costStrongerAuto.mantissa, state.costStrongerAuto.exponent);
-    const ratio = BigNum.fromNumber(1.15);
+    const ratio = BigNum.fromNumber(UPGRADE_CONFIG.strongerAutoRatio);
 
     while (count < (990 - state.autoPurchases) && probeCoins.cmp(probeCost) >= 0) {
         probeCoins = probeCoins.sub(probeCost);
@@ -119,18 +119,37 @@ function estimateMaxStrongerAutoExact() {
     return count;
 }
 
+function cloneBigNum(bn) {
+    return new BigNum(bn.mantissa, bn.exponent);
+}
+
+// Progression tuning (made easier).
+const UPGRADE_CONFIG = {
+    addBaseCost: new BigNum(5, 0),          // 5
+    addRatio: 1.25,
+    betterAddBaseCost: new BigNum(15, 2),   // 1500
+    betterAddRatio: 1.15,
+    autoUnlockCost: new BigNum(1, 4),       // 10000
+    strongerAutoBaseCost: new BigNum(1, 4), // 10000
+    strongerAutoRatio: 1.08
+};
+
 // Game State
 const state = {
     coins: new BigNum(0, 0),
     multiplier: new BigNum(1, 0), // Base multi is 1
-    costPlus1: new BigNum(1, 1),  // Cost: 10
-    costTimes1_5: new BigNum(1, 2), // Cost: 100
+    costPlus1: cloneBigNum(UPGRADE_CONFIG.addBaseCost),
+    costBetterAdd: cloneBigNum(UPGRADE_CONFIG.betterAddBaseCost),
+    betterAddLevel: 0,
     hasAutoclicker: false,
     autoPurchases: 0,
-    costStrongerAuto: new BigNum(5, 4) // Cost: 50000
+    costStrongerAuto: cloneBigNum(UPGRADE_CONFIG.strongerAutoBaseCost),
+    growthRate: new BigNum(2, 2), // 200 coins/s base
+    hype: 0,
+    burstTimer: 0
 };
 
-const AUTO_COST = new BigNum(5, 4);
+const AUTO_COST = cloneBigNum(UPGRADE_CONFIG.autoUnlockCost);
 
 // Formatter Instance is already provided globally by scripts.js as `formatter`
 
@@ -146,16 +165,22 @@ function formatBigNum(bn) {
 const coinDisplay = document.getElementById("coin-display");
 const multiDisplay = document.getElementById("multi-display");
 const cpsDisplay = document.getElementById("cps-display");
+const rateDisplay = document.getElementById("rate-display");
+const hypeDisplay = document.getElementById("hype-display");
 const coinButton = document.getElementById("coin-button");
+const vibeText = document.getElementById("vibe-text");
+const growthGraph = document.getElementById("growth-graph");
+const growthCtx = growthGraph ? growthGraph.getContext("2d") : null;
 
 const costPlusDisplay = document.getElementById("cost-plus");
 const btnAddMax = document.getElementById("buy-add-max-btn");
 const addCanBuyDisplay = document.getElementById("add-can-buy");
 
-const multSection = document.getElementById("mult-section");
-const costTimesDisplay = document.getElementById("cost-times");
-const btnMultMax = document.getElementById("buy-mult-max-btn");
-const multCanBuyDisplay = document.getElementById("mult-can-buy");
+const betterAddSection = document.getElementById("better-add-section");
+const costBetterAddDisplay = document.getElementById("cost-better-add");
+const betterAddEffectDisplay = document.getElementById("better-add-effect");
+const btnBetterAddMax = document.getElementById("buy-better-add-max-btn");
+const betterAddCanBuyDisplay = document.getElementById("better-add-can-buy");
 
 const btnBuyAuto = document.getElementById("buy-auto-btn");
 const autoOwnedDisplay = document.getElementById("auto-owned-display");
@@ -166,43 +191,98 @@ const costStrongerAutoDisplay = document.getElementById("cost-stronger-auto");
 const btnStrongerAutoMax = document.getElementById("buy-stronger-auto-max-btn");
 const strongerAutoCanBuyDisplay = document.getElementById("stronger-auto-can-buy");
 
+let graphSamples = [];
+
+function getCoinLog10() {
+    if (state.coins.mantissa <= 0) return 0;
+    return Math.log10(state.coins.mantissa) + state.coins.exponent;
+}
+
+function drawGrowthGraph() {
+    if (!growthCtx || !growthGraph || graphSamples.length < 2) return;
+
+    const w = growthGraph.width;
+    const h = growthGraph.height;
+    growthCtx.clearRect(0, 0, w, h);
+
+    // Background grid
+    growthCtx.strokeStyle = "rgba(148, 163, 184, 0.18)";
+    growthCtx.lineWidth = 1;
+    for (let i = 1; i < 6; i++) {
+        const y = (h / 6) * i;
+        growthCtx.beginPath();
+        growthCtx.moveTo(0, y);
+        growthCtx.lineTo(w, y);
+        growthCtx.stroke();
+    }
+
+    const minV = Math.min(...graphSamples.map((s) => s.v));
+    const maxV = Math.max(...graphSamples.map((s) => s.v));
+    const spread = Math.max(1e-9, maxV - minV);
+    const xStep = w / Math.max(1, graphSamples.length - 1);
+
+    growthCtx.lineWidth = 3;
+    growthCtx.strokeStyle = "#38bdf8";
+    growthCtx.beginPath();
+    for (let i = 0; i < graphSamples.length; i++) {
+        const x = i * xStep;
+        const t = (graphSamples[i].v - minV) / spread;
+        const y = h - (t * (h - 20) + 10);
+        if (i === 0) growthCtx.moveTo(x, y);
+        else growthCtx.lineTo(x, y);
+    }
+    growthCtx.stroke();
+}
+
+function updateVibeText() {
+    if (!vibeText) return;
+    const logCoins = getCoinLog10();
+    if (state.burstTimer > 0) {
+        vibeText.innerText = "Giggle burst active";
+    } else if (logCoins > 30) {
+        vibeText.innerText = "Absolute chaos";
+    } else if (logCoins > 18) {
+        vibeText.innerText = "Acceleration is spicy";
+    } else if (logCoins > 8) {
+        vibeText.innerText = "Steady exponential climb";
+    } else {
+        vibeText.innerText = "Calm climb";
+    }
+}
+
 // Update UI Function
 function updateUI() {
     coinDisplay.innerText = formatBigNum(state.coins);
     multiDisplay.innerText = "x" + formatBigNum(state.multiplier);
+    rateDisplay.innerText = `${formatBigNum(state.growthRate)}/s`;
+    hypeDisplay.innerText = `${Math.round(state.hype * 100)}%`;
 
     costPlusDisplay.innerText = "Cost: " + formatBigNum(state.costPlus1) + " Coins";
-    costTimesDisplay.innerText = "Cost: " + formatBigNum(state.costTimes1_5) + " Coins";
+    costBetterAddDisplay.innerText = "Cost: " + formatBigNum(state.costBetterAdd) + " Coins";
+    betterAddEffectDisplay.innerText = `Will add each upgrade: +1 Multi (Current +${state.betterAddLevel + 1} per buy)`;
     costStrongerAutoDisplay.innerText = "Cost: " + formatBigNum(state.costStrongerAuto) + " Coins";
 
     // Max purchases calcs
-    const maxAdd = estimateMaxPurchases(state.coins, state.costPlus1, 1.5);
-    const maxMult = estimateMaxPurchases(state.coins, state.costTimes1_5, 5);
+    const maxAdd = estimateMaxPurchases(state.coins, state.costPlus1, UPGRADE_CONFIG.addRatio);
+    const maxBetterAdd = estimateMaxPurchases(state.coins, state.costBetterAdd, UPGRADE_CONFIG.betterAddRatio);
 
     let maxStrongerAuto = estimateMaxStrongerAutoExact();
 
     addCanBuyDisplay.innerText = `(Can buy: ${formatBigNum(BigNum.fromNumber(maxAdd))})`;
-    multCanBuyDisplay.innerText = `(Can buy: ${formatBigNum(BigNum.fromNumber(maxMult))})`;
+    betterAddCanBuyDisplay.innerText = `(Can buy: ${formatBigNum(BigNum.fromNumber(maxBetterAdd))})`;
 
     const intervalMs = Math.max(10, 1000 - state.autoPurchases);
     const intervalSec = intervalMs / 1000;
     strongerAutoCanBuyDisplay.innerText = `(Can buy: ${formatBigNum(BigNum.fromNumber(maxStrongerAuto))})\n-0.001s / upgrade`;
 
     btnAddMax.disabled = maxAdd <= 0;
-    btnMultMax.disabled = maxMult <= 0;
+    btnBetterAddMax.disabled = maxBetterAdd <= 0;
     btnBuyAuto.disabled = state.coins.cmp(AUTO_COST) < 0 || state.hasAutoclicker;
     btnStrongerAutoMax.disabled = maxStrongerAuto <= 0 || !state.hasAutoclicker || state.autoPurchases >= 990;
 
-    // Multiplicative blur
-    if (state.multiplier.cmp(new BigNum(1, 0)) <= 0) {
-        multSection.style.filter = "blur(4px)";
-        multSection.style.pointerEvents = "none";
-        multSection.style.opacity = "0.7";
-    } else {
-        multSection.style.filter = "none";
-        multSection.style.pointerEvents = "auto";
-        multSection.style.opacity = "1";
-    }
+    betterAddSection.style.filter = "none";
+    betterAddSection.style.pointerEvents = "auto";
+    betterAddSection.style.opacity = "1";
 
     // Auto blur
     if (state.hasAutoclicker) {
@@ -224,31 +304,30 @@ function updateUI() {
 
 // Click Coin Logic
 coinButton.addEventListener("click", () => {
-    // Random gain from 1 to 10
-    const rawGain = Math.floor(Math.random() * 10) + 1;
-    const baseGain = BigNum.fromNumber(rawGain);
+    state.hype = Math.min(1, state.hype + 0.08);
+    state.burstTimer = Math.min(6, state.burstTimer + 1.2);
 
-    // Multiply by multiplier
-    const totalGain = baseGain.mul(state.multiplier);
+    const burstGain = state.growthRate.mul(BigNum.fromNumber(0.35 + state.hype * 0.5));
+    state.coins = state.coins.add(burstGain);
 
-    // Add to total
-    state.coins = state.coins.add(totalGain);
+    // Clicking also nudges long-term growth slightly.
+    state.growthRate = state.growthRate.mul(BigNum.fromNumber(1.01 + state.hype * 0.01));
     updateUI();
 });
 
 // Shop Logic: Additive
 function buyAdditiveMax() {
-    const num = estimateMaxPurchases(state.coins, state.costPlus1, 1.5);
+    const num = estimateMaxPurchases(state.coins, state.costPlus1, UPGRADE_CONFIG.addRatio);
     if (num <= 0) return;
 
     // cost sum = C * (r^n - 1) / (r - 1)
-    // ratio is 1.5, r - 1 = 0.5 (so we divide by 0.5 which means multiply by 2)
-    const ratioPowN = BigNum.fromNumber(1.5).pow(num);
+    const ratioPowN = BigNum.fromNumber(UPGRADE_CONFIG.addRatio).pow(num);
     const rnMinus1 = ratioPowN.sub(BigNum.fromNumber(1));
-    const totalCost = state.costPlus1.mul(rnMinus1).mul(BigNum.fromNumber(2));
+    const totalCost = state.costPlus1.mul(rnMinus1).mul(BigNum.fromNumber(1 / (UPGRADE_CONFIG.addRatio - 1)));
+    const additiveGainPerBuy = state.betterAddLevel + 1;
 
     state.coins = state.coins.sub(totalCost);
-    state.multiplier = state.multiplier.add(BigNum.fromNumber(num));
+    state.multiplier = state.multiplier.add(BigNum.fromNumber(num * additiveGainPerBuy));
     state.costPlus1 = state.costPlus1.mul(ratioPowN);
 
     updateUI();
@@ -256,26 +335,23 @@ function buyAdditiveMax() {
 
 btnAddMax.addEventListener("click", buyAdditiveMax);
 
-// Shop Logic: Multiplicative
-function buyMultiplicativeMax() {
-    const num = estimateMaxPurchases(state.coins, state.costTimes1_5, 5);
+// Shop Logic: Better Additive
+function buyBetterAdditiveMax() {
+    const num = estimateMaxPurchases(state.coins, state.costBetterAdd, UPGRADE_CONFIG.betterAddRatio);
     if (num <= 0) return;
 
-    // cost sum = C * (r^n - 1) / (r - 1)
-    // ratio is 5, r - 1 = 4
-    const ratioPowN = BigNum.fromNumber(5).pow(num);
+    const ratioPowN = BigNum.fromNumber(UPGRADE_CONFIG.betterAddRatio).pow(num);
     const rnMinus1 = ratioPowN.sub(BigNum.fromNumber(1));
-    const totalCost = state.costTimes1_5.mul(rnMinus1).mul(BigNum.fromNumber(0.25));
+    const totalCost = state.costBetterAdd.mul(rnMinus1).mul(BigNum.fromNumber(1 / (UPGRADE_CONFIG.betterAddRatio - 1)));
 
     state.coins = state.coins.sub(totalCost);
-    // Multiplier increases by x1.5 per buy, so multiply by 1.5^n
-    state.multiplier = state.multiplier.mul(BigNum.fromNumber(1.5).pow(num));
-    state.costTimes1_5 = state.costTimes1_5.mul(ratioPowN);
+    state.betterAddLevel += num;
+    state.costBetterAdd = state.costBetterAdd.mul(ratioPowN);
 
     updateUI();
 }
 
-btnMultMax.addEventListener("click", buyMultiplicativeMax);
+btnBetterAddMax.addEventListener("click", buyBetterAdditiveMax);
 
 // Autoclicker Shop Logic
 btnBuyAuto.addEventListener("click", () => {
@@ -290,9 +366,9 @@ btnStrongerAutoMax.addEventListener("click", () => {
     let num = estimateMaxStrongerAutoExact();
     if (num <= 0) return;
 
-    const ratioPowN = BigNum.fromNumber(1.15).pow(num);
+    const ratioPowN = BigNum.fromNumber(UPGRADE_CONFIG.strongerAutoRatio).pow(num);
     const rnMinus1 = ratioPowN.sub(BigNum.fromNumber(1));
-    const totalCost = state.costStrongerAuto.mul(rnMinus1).mul(BigNum.fromNumber(1 / 0.15));
+    const totalCost = state.costStrongerAuto.mul(rnMinus1).mul(BigNum.fromNumber(1 / (UPGRADE_CONFIG.strongerAutoRatio - 1)));
 
     state.coins = state.coins.sub(totalCost);
     state.autoPurchases += num;
@@ -310,10 +386,14 @@ function saveGame() {
         coins: { m: state.coins.mantissa, e: state.coins.exponent },
         multiplier: { m: state.multiplier.mantissa, e: state.multiplier.exponent },
         costPlus1: { m: state.costPlus1.mantissa, e: state.costPlus1.exponent },
-        costTimes1_5: { m: state.costTimes1_5.mantissa, e: state.costTimes1_5.exponent },
+        costBetterAdd: { m: state.costBetterAdd.mantissa, e: state.costBetterAdd.exponent },
+        betterAddLevel: state.betterAddLevel,
         hasAutoclicker: state.hasAutoclicker,
         autoPurchases: state.autoPurchases,
-        costStrongerAuto: { m: state.costStrongerAuto.mantissa, e: state.costStrongerAuto.exponent }
+        costStrongerAuto: { m: state.costStrongerAuto.mantissa, e: state.costStrongerAuto.exponent },
+        growthRate: { m: state.growthRate.mantissa, e: state.growthRate.exponent },
+        hype: state.hype,
+        burstTimer: state.burstTimer
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
 }
@@ -326,10 +406,19 @@ function loadGame(saveString) {
             if (loadData.coins) state.coins = new BigNum(loadData.coins.m, loadData.coins.e);
             if (loadData.multiplier) state.multiplier = new BigNum(loadData.multiplier.m, loadData.multiplier.e);
             if (loadData.costPlus1) state.costPlus1 = new BigNum(loadData.costPlus1.m, loadData.costPlus1.e);
-            if (loadData.costTimes1_5) state.costTimes1_5 = new BigNum(loadData.costTimes1_5.m, loadData.costTimes1_5.e);
+            if (loadData.costBetterAdd) {
+                state.costBetterAdd = new BigNum(loadData.costBetterAdd.m, loadData.costBetterAdd.e);
+            } else if (loadData.costTimes1_5) {
+                // Backward compatibility with old multiplicative save key.
+                state.costBetterAdd = new BigNum(loadData.costTimes1_5.m, loadData.costTimes1_5.e);
+            }
+            if (loadData.betterAddLevel !== undefined) state.betterAddLevel = loadData.betterAddLevel;
             if (loadData.hasAutoclicker !== undefined) state.hasAutoclicker = loadData.hasAutoclicker;
             if (loadData.autoPurchases !== undefined) state.autoPurchases = loadData.autoPurchases;
             if (loadData.costStrongerAuto) state.costStrongerAuto = new BigNum(loadData.costStrongerAuto.m, loadData.costStrongerAuto.e);
+            if (loadData.growthRate) state.growthRate = new BigNum(loadData.growthRate.m, loadData.growthRate.e);
+            if (typeof loadData.hype === "number") state.hype = Math.max(0, Math.min(1, loadData.hype));
+            if (typeof loadData.burstTimer === "number") state.burstTimer = Math.max(0, loadData.burstTimer);
             updateUI();
         }
     } catch (e) {
@@ -342,11 +431,15 @@ function resetGame() {
     if (confirm("Are you sure you want to completely reset your progress?")) {
         state.coins = new BigNum(0, 0);
         state.multiplier = new BigNum(1, 0);
-        state.costPlus1 = new BigNum(1, 1);
-        state.costTimes1_5 = new BigNum(1, 2);
+        state.costPlus1 = cloneBigNum(UPGRADE_CONFIG.addBaseCost);
+        state.costBetterAdd = cloneBigNum(UPGRADE_CONFIG.betterAddBaseCost);
+        state.betterAddLevel = 0;
         state.hasAutoclicker = false;
         state.autoPurchases = 0;
-        state.costStrongerAuto = new BigNum(5, 4);
+        state.costStrongerAuto = cloneBigNum(UPGRADE_CONFIG.strongerAutoBaseCost);
+        state.growthRate = new BigNum(2, 2);
+        state.hype = 0;
+        state.burstTimer = 0;
         saveGame();
         updateUI();
     }
@@ -385,27 +478,42 @@ document.getElementById("import-btn").addEventListener("click", () => {
 document.getElementById("hard-reset-btn").addEventListener("click", resetGame);
 
 // Real-time CPS tracking and Game Loop
-let lastAutoClickTime = performance.now();
+let lastFrameTime = performance.now();
 let coinHistory = [];
+let uiRefreshTimer = 0;
+let graphSampleTimer = 0;
 
 function gameLoop(timestamp) {
-    if (state.hasAutoclicker) {
-        const intervalMs = Math.max(10, 1000 - state.autoPurchases);
-        const delta = timestamp - lastAutoClickTime;
+    const dt = Math.min(0.25, Math.max(0, (timestamp - lastFrameTime) / 1000));
+    lastFrameTime = timestamp;
 
-        if (delta >= intervalMs) {
-            const numTicks = Math.floor(delta / intervalMs);
-            lastAutoClickTime += numTicks * intervalMs;
+    // Hype decays slowly if not actively bursting.
+    state.hype = Math.max(0, state.hype - dt * 0.06);
 
-            const avgGain = BigNum.fromNumber(5.5).mul(state.multiplier);
-            const totalGain = avgGain.mul(BigNum.fromNumber(numTicks));
+    const wave = 0.12 * (1 + Math.sin(timestamp * 0.0008));
+    const accel = 0.22 + wave + state.hype * 0.45;
+    state.growthRate = state.growthRate.mul(BigNum.fromNumber(1 + accel * dt));
 
-            // Increment logic
-            state.coins = state.coins.add(totalGain);
-            updateUI();
-        }
-    } else {
-        lastAutoClickTime = timestamp;
+    const autoBonus = (state.hasAutoclicker ? 0.5 : 0) + state.autoPurchases * 0.01;
+    const additiveBonus = state.betterAddLevel * 0.08;
+    const burstBonus = state.burstTimer > 0 ? (1 + state.hype * 2.2) : 1;
+    const passiveScale = (1 + autoBonus + additiveBonus) * burstBonus;
+
+    const passiveGain = state.growthRate
+        .mul(BigNum.fromNumber(dt))
+        .mul(BigNum.fromNumber(passiveScale))
+        .mul(state.multiplier);
+
+    state.coins = state.coins.add(passiveGain);
+
+    if (state.burstTimer > 0) {
+        state.burstTimer = Math.max(0, state.burstTimer - dt);
+    }
+
+    uiRefreshTimer += dt;
+    if (uiRefreshTimer >= 0.1) {
+        updateUI();
+        uiRefreshTimer = 0;
     }
 
     // Keep history pruned to ~1.5 seconds
@@ -429,6 +537,15 @@ function gameLoop(timestamp) {
         cpsDisplay.innerText = formatBigNum(exactDiff);
     } else {
         cpsDisplay.innerText = "0";
+    }
+
+    graphSampleTimer += dt;
+    if (graphSampleTimer >= 0.2) {
+        graphSamples.push({ t: timeNow, v: getCoinLog10() });
+        if (graphSamples.length > 180) graphSamples.shift();
+        graphSampleTimer = 0;
+        drawGrowthGraph();
+        updateVibeText();
     }
 
     requestAnimationFrame(gameLoop);

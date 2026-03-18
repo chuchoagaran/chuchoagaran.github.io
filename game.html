@@ -15,18 +15,25 @@
     <main class="container">
         <h1>Infinite Coin Clicker</h1>
         <p class="purpose">
-            Click coins to generate absurdly large numbers! Powered by the custom Infinite Number Reader engine.
-            Made with Gemini 3.1 Pro.
+            Spectator mode: sit back and watch the number climb faster and faster. Tap burst when you want extra chaos.
         </p>
 
         <div class="stats-board">
             <h2>Coins: <span id="coin-display" class="highlight-number">0</span></h2>
             <h3>Multiplier: <span id="multi-display">x1</span></h3>
             <h3>Coins/s: <span id="cps-display">0</span></h3>
+            <h3>Growth Rate: <span id="rate-display">0/s</span></h3>
+            <h3>Hype: <span id="hype-display">0%</span></h3>
         </div>
 
         <div class="click-area">
-            <button id="coin-button" class="coin-btn">💰 CLICK for coin! 💰</button>
+            <button id="coin-button" class="coin-btn">Trigger Giggle Burst</button>
+        </div>
+
+        <div class="graph-panel">
+            <h2>Growth Graph</h2>
+            <canvas id="growth-graph" width="900" height="260" aria-label="Coin growth graph"></canvas>
+            <p id="vibe-text" class="vibe-text">Calm climb...</p>
         </div>
 
         <div class="shop-area">
@@ -38,7 +45,10 @@
                     style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch;">
                     <div style="text-align: center; margin-bottom: 0.5rem;">
                         <span class="upgrade-title">Additive Multiplier</span><br />
-                        <span id="cost-plus" class="cost-text">Cost: 10 Coins</span>
+
+                        <span id="cost-plus" class="cost-text">Cost: 5 Coins</span><br />
+                        <span id="better-add-effect" style="font-size: 0.95rem; color: #4b5563;">Will add each upgrade:
+                            +1 Multi</span>
                     </div>
                     <button id="buy-add-max-btn" class="shop-btn" style="padding: 25px 15px;">
                         <span style="font-size: 1.4rem; font-weight: bold;">+ MAX</span>
@@ -47,16 +57,18 @@
                     </button>
                 </div>
 
-                <!-- Column 2: Multiplicative -->
-                <div id="mult-section" class="shop-column"
+                <!-- Column 2: Better Additive -->
+                <div id="better-add-section" class="shop-column"
                     style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch;">
                     <div style="text-align: center; margin-bottom: 0.5rem;">
-                        <span class="upgrade-title">Multiplicative Multiplier</span><br />
-                        <span id="cost-times" class="cost-text">Cost: 100 Coins</span>
+                        <span class="upgrade-title">Better Additive Multiplier</span><br />
+                        <span id="cost-better-add" class="cost-text">Cost: 5,000 Coins</span><br />
+
                     </div>
-                    <button id="buy-mult-max-btn" class="shop-btn" style="padding: 25px 15px;">
-                        <span style="font-size: 1.4rem; font-weight: bold;">x MAX</span>
-                        <span id="mult-can-buy" style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Can
+                    <button id="buy-better-add-max-btn" class="shop-btn" style="padding: 25px 15px;">
+                        <span style="font-size: 1.4rem; font-weight: bold;">Upgrade MAX</span>
+                        <span id="better-add-can-buy"
+                            style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Can
                             buy: 0)</span>
                     </button>
                 </div>
@@ -68,7 +80,7 @@
                     style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch;">
                     <div style="text-align: center; margin-bottom: 0.5rem;">
                         <span class="upgrade-title">Autoclicker</span><br />
-                        <span class="cost-text">Cost: 50,000 Coins</span>
+                        <span class="cost-text">Cost: 10,000 Coins</span>
                         <br />
                         <span id="auto-speed-display" style="font-size: 0.95rem; color: #4b5563;">Current Speed: 0.00
                             Clicks/s</span>
@@ -85,13 +97,13 @@
                     style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; filter: blur(4px); pointer-events: none; opacity: 0.7;">
                     <div style="text-align: center; margin-bottom: 0.5rem;">
                         <span class="upgrade-title">Stronger Autoclicker</span><br />
-                        <span id="cost-stronger-auto" class="cost-text">Cost: 50,000 Coins</span>
+                        <span id="cost-stronger-auto" class="cost-text">Cost: 10,000 Coins</span>
                     </div>
                     <button id="buy-stronger-auto-max-btn" class="shop-btn" style="padding: 25px 15px;">
                         <span style="font-size: 1.4rem; font-weight: bold;">Upgrade MAX</span>
                         <span id="stronger-auto-can-buy"
                             style="font-size: 0.95rem; font-weight: normal; margin-top: 5px;">(Can buy: 0)
-                            +0.01 click/s</span>
+                            -0.001s / upgrade</span>
                     </button>
                 </div>
             </div>
