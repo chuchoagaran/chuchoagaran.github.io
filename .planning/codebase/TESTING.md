@@ -5,15 +5,18 @@
 ## Test Framework
 
 **Runner:**
+
 - Python script runner (direct execution) in `scripts/tests/test_formatter.py`.
 - Node.js script runner (direct execution) in `scripts/references/test_formatter.js`.
 - Config: Not detected (`pytest.ini`, `jest.config.*`, `vitest.config.*` not present).
 
 **Assertion Library:**
+
 - JavaScript: custom `assert(cond, msg)` helper in `scripts/references/test_formatter.js`.
 - Python: custom diagnostics and issue collection in `scripts/tests/test_formatter.py`.
 
 **Run Commands:**
+
 ```bash
 python scripts/tests/test_formatter.py     # Runs formatter report across 1299 sampled exponents
 node scripts/references/test_formatter.js  # Currently fails: wrong path to templates/js/scripts.js
@@ -23,14 +26,17 @@ python -m http.server 8000                 # Manual browser validation for index
 ## Test File Organization
 
 **Location:**
+
 - Separate directories, not co-located with runtime source:
   - `scripts/tests/test_formatter.py`
   - `scripts/references/test_formatter.js`
 
 **Naming:**
+
 - `test_*.py` and `test_*.js` naming pattern.
 
 **Structure:**
+
 ```
 scripts/
 ├── tests/
@@ -42,6 +48,7 @@ scripts/
 ## Test Structure
 
 **Suite Organization:**
+
 ```typescript
 section("Known readable values");
 for (const [exp, expected] of knownReadable) {
@@ -51,6 +58,7 @@ for (const [exp, expected] of knownReadable) {
 ```
 
 **Patterns:**
+
 - Setup pattern: instantiate formatter once, then run grouped checks.
 - Teardown pattern: not used.
 - Assertion pattern: boolean checks with custom pass/fail counters and process exit code in JS; issue list + report printout in Python.
@@ -60,6 +68,7 @@ for (const [exp, expected] of knownReadable) {
 **Framework:** None
 
 **Patterns:**
+
 ```typescript
 // No mocks; script loads/evaluates production-like source and checks outputs directly.
 vm.runInThisContext(source);
@@ -67,14 +76,17 @@ const formatter = new InfiniteNumberFormatter();
 ```
 
 **What to Mock:**
+
 - Not currently defined in repository.
 
 **What NOT to Mock:**
+
 - Core formatter naming and abbreviation logic is tested as pure computation.
 
 ## Fixtures and Factories
 
 **Test Data:**
+
 ```typescript
 const knownReadable = [
   [6, "Million"],
@@ -84,6 +96,7 @@ const knownReadable = [
 ```
 
 **Location:**
+
 - Inline arrays and exponent ranges inside each test script.
 
 ## Coverage
@@ -91,6 +104,7 @@ const knownReadable = [
 **Requirements:** None enforced
 
 **View Coverage:**
+
 ```bash
 # Not available: no coverage tooling configured
 ```
@@ -98,22 +112,27 @@ const knownReadable = [
 ## Test Types
 
 **Unit Tests:**
+
 - Approximate unit-style checks exist for formatter methods (name/abbreviation outputs for selected exponents).
 
 **Integration Tests:**
+
 - None automated for DOM wiring (`setupMiniReader`, form submit flow), save/load behavior, or game loop behavior.
 
 **E2E Tests:**
+
 - Not used.
 
 ## Common Patterns
 
 **Async Testing:**
+
 ```typescript
 // Not used; current checks are synchronous.
 ```
 
 **Error Testing:**
+
 ```typescript
 const issues = diagnose_abbreviation(suffix, exponent);
 if (issues.length) {
