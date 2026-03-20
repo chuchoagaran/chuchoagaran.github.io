@@ -1,0 +1,21 @@
+# Project Roadmap
+
+**Goal:** Ensure absolute mathematical predictability, naming correctness, and abbreviation alignment for Infinite Number ranges from $1e0$ up to $1e2999999$.
+
+## Phase 1: Research & Canonization
+**Goal:** Formalize the canonical logic and expected outcomes to fix against.
+**Requirements:** `[DOC-01, DOC-02]`
+**Plans:** 0 plans
+
+## Phase 2: Test Harness Construction
+**Goal:** Establish extensive JS snapshot invariants that can prove behavior deterministically across the boundary edge cases.
+**Requirements:** `[TEST-01, TEST-02, TEST-03]`
+**Plans:** 0 plans
+
+## Phase 3: Formatter Refactor & Validation
+**Goal:** Refactor the formatter logic to resolve drift, cover edge cases up to $1e2999999$, avoid max integer issues, and perfectly align with new tests.
+**Requirements:** `[FMT-01, FMT-02, FMT-03]`
+**Plans:** 0 plans
+
+---
+*Roadmap generated: 2026-03-20*
