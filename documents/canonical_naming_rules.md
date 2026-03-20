@@ -38,3 +38,4 @@ For Tier 2, abbreviation is formed by taking up to three letters from the tier r
 - $10^{6003}$: `1 DiMi` or `1 BiMi` depending on the tier base (We enforce `1 Ba` or `1 Plat` based on custom `scripts.js` rules). For exact edge examples: $10^{3003}$ uses "Millillion", and $10^{6003}$ uses "Platillion" or "Millillion" equivalent but for Tier 3 logic.
 - The standard enforces consistency up to `1e2999999`.
 
+ 
