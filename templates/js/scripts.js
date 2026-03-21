@@ -35,6 +35,46 @@ class InfiniteNumberFormatter {
         this.milliOnes = ["", "un", "du", "tri", "quadri", "quin", "sex", "septi", "octi", "noni"];
     }
 
+    getSuffixIndexFromExponent(exponent) {
+        if (exponent < 3) {
+            return -1;
+        }
+
+        return Math.floor(exponent / 3) - 1;
+    }
+
+    getGroupInfoFromExponent(exponent) {
+        const suffixIndex = this.getSuffixIndexFromExponent(exponent);
+
+        if (suffixIndex < 0) {
+            return {
+                suffixIndex,
+                tier1Index: -1,
+                tier2Index: 0,
+                isTier1: false,
+                isUnderThousand: true
+            };
+        }
+
+        return {
+            suffixIndex,
+            tier1Index: suffixIndex % 1000,
+            tier2Index: Math.floor(suffixIndex / 1000),
+            isTier1: suffixIndex < 1000,
+            isUnderThousand: false
+        };
+    }
+
+    getDisplayValueParts(mantissa, exponent) {
+        const normalized = this.normalizeDisplayValue(mantissa, exponent);
+        const displayMantissa = Math.round(normalized.displayMantissa * 1000) / 1000;
+
+        return {
+            exponent: normalized.exponent,
+            displayMantissa
+        };
+    }
+
     // Handles the core 10 to 999 combinations
     getTier1Name(index) {
         if (index <= 10) return this.basics[index] || "Decillion";
@@ -81,30 +121,21 @@ class InfiniteNumberFormatter {
 
     // Handles going "Infinite" by combining Tier 2 with Tier 1
     getFullNameFromExponent(exponent) {
-        if (exponent < 3) return "Under a Thousand";
+        const groupInfo = this.getGroupInfoFromExponent(exponent);
 
-        // suffixIndex = group - 1
-        // e.g. 10^3 → 0 (Thousand), 10^6 → 1 (Million), 10^3003 → 1000 (Millillion)
-        let suffixIndex = Math.floor(exponent / 3) - 1;
+        if (groupInfo.isUnderThousand) return "Under a Thousand";
 
-        if (suffixIndex < 0) return "Under a Thousand";
+        if (groupInfo.isTier1) return this.getTier1Name(groupInfo.suffixIndex + 1);
 
-        // Under 1000: standard tier-1 names
-        if (suffixIndex < 1000) return this.getTier1Name(suffixIndex + 1);
-
-        // 1000 or over: split into tier-2 prefix + tier-1 suffix
-        let t1Index = suffixIndex % 1000;
-        let t2Index = Math.floor(suffixIndex / 1000);
-
-        const prefix = this.getMilliPrefix(t2Index);
+        const prefix = this.getMilliPrefix(groupInfo.tier2Index);
 
         // t1Index 0 → pure tier2 word: "milli"+"llion" = "millillion"
         // t1Index 1+ → tier2 + tier1 name: "milli"+"million" = "millimillion"
         let suffix;
-        if (t1Index === 0) {
+        if (groupInfo.tier1Index === 0) {
             suffix = "llion";
         } else {
-            suffix = this.getTier1Name(t1Index + 1).toLowerCase();
+            suffix = this.getTier1Name(groupInfo.tier1Index + 1).toLowerCase();
         }
 
         const name = prefix + suffix;
@@ -125,16 +156,14 @@ class InfiniteNumberFormatter {
     }
 
     buildReadableText(mantissa, exponent) {
-        const normalized = this.normalizeDisplayValue(mantissa, exponent);
-        let displayMantissa = normalized.displayMantissa;
-        displayMantissa = Math.round(displayMantissa * 1000) / 1000; // avoid floating point issues
+        const displayValue = this.getDisplayValueParts(mantissa, exponent);
 
-        if (normalized.exponent < 3) {
-            return `${displayMantissa} (under a thousand)`;
+        if (displayValue.exponent < 3) {
+            return `${displayValue.displayMantissa} (under a thousand)`;
         }
 
-        const name = this.getFullNameFromExponent(normalized.exponent);
-        return `${displayMantissa} ${name}`;
+        const name = this.getFullNameFromExponent(displayValue.exponent);
+        return `${displayValue.displayMantissa} ${name}`;
     }
 
     getSmallSuffixChunk(index) {
@@ -157,15 +186,13 @@ class InfiniteNumberFormatter {
     }
 
     getLuaStyleAbbreviationSuffix(exponent) {
-        if (exponent < 3) {
+        const groupInfo = this.getGroupInfoFromExponent(exponent);
+
+        if (groupInfo.isUnderThousand) {
             return "";
         }
 
-        let suffixIndex = Math.floor(exponent / 3) - 1;
-
-        if (suffixIndex < 0) {
-            return "";
-        }
+        let suffixIndex = groupInfo.suffixIndex;
 
         if (suffixIndex < this.shortSuffixes.length) {
             return this.shortSuffixes[suffixIndex];
@@ -205,17 +232,15 @@ class InfiniteNumberFormatter {
     }
 
     buildAbbreviationText(mantissa, exponent) {
-        const normalized = this.normalizeDisplayValue(mantissa, exponent);
-        let displayMantissa = normalized.displayMantissa;
-        displayMantissa = Math.round(displayMantissa * 1000) / 1000; // avoid floating point issues
+        const displayValue = this.getDisplayValueParts(mantissa, exponent);
 
-        const suffix = this.getAbbreviationFromExponent(normalized.exponent);
+        const suffix = this.getAbbreviationFromExponent(displayValue.exponent);
 
         if (!suffix) {
-            return `${displayMantissa}`;
+            return `${displayValue.displayMantissa}`;
         }
 
-        return `${displayMantissa} ${suffix}`;
+        return `${displayValue.displayMantissa} ${suffix}`;
     }
 
     parseNotationInput(rawInput) {
