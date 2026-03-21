@@ -50,7 +50,7 @@ Each task was committed atomically:
 1. **Task 1: Rewrite canonical full-name coverage and range limits** - `0c76341` (docs)
 2. **Task 2: Define a single abbreviation algorithm and parity table** - `f671065` (docs)
 
-**Plan metadata:** `PENDING_PLAN_METADATA_COMMIT` (docs)
+**Plan metadata:** `30bd9b4` (docs)
 
 ## Files Created/Modified
 - `.planning/phases/01-research-canonization/01-02-SUMMARY.md` - Execution summary for the gap-closure plan.
