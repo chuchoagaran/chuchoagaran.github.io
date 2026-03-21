@@ -24,9 +24,10 @@
 
 **Goal:** Refactor the formatter logic to resolve drift, cover edge cases up to $1e2999999$, avoid max integer issues, and perfectly align with new tests.
 **Requirements:** `[FMT-01, FMT-02, FMT-03]`
-**Plans:** 1 plans
+**Plans:** 2 plans
 
-- [ ] 01-01-PLAN.md — Formalize naming logic and expected abbreviations
+- [ ] 03-01-PLAN.md — Refactor the formatter core around shared canonical helpers
+- [ ] 03-02-PLAN.md — Enforce supported-ceiling bounds and parser safety under the harness
 
 ---
 *Roadmap generated: 2026-03-20*
