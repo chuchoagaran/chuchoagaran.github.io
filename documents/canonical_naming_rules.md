@@ -76,8 +76,49 @@ This is a two-layer system across the supported range. No Tier 3 naming is requi
 - `10^3003 -> Millillion`
 - `10^6003 -> Dumillillion`
 
-## Abbreviation Notes
+## Canonical Abbreviation Algorithm
 
-Abbreviations are defined separately from the full-name rules and must also follow the current formatter exactly. The next section of this document defines the canonical abbreviation algorithm and the parity examples used for verification.
+The canonical abbreviation behavior matches `getLuaStyleAbbreviationSuffix(exponent)` exactly.
+
+1. If `exponent < 3`, the abbreviation suffix is empty.
+2. Compute `suffixIndex = floor(exponent / 3) - 1`.
+3. If `suffixIndex < 0`, the abbreviation suffix is empty.
+4. If `suffixIndex` is `0`, `1`, or `2`, use the direct short suffix table:
+	- `0 -> K`
+	- `1 -> M`
+	- `2 -> B`
+5. If `suffixIndex` is from `3` through `999`, use `getSmallSuffixChunk(index)` built from:
+	- `firstOnes = ["", "U", "D", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No"]`
+	- `secondOnes = ["", "De", "Vt", "Tg", "qg", "Qg", "sg", "Sg", "Og", "Ng"]`
+	- `thirdOnes = ["", "Ce", "Du", "Tr", "Qa", "Qi", "Se", "Si", "Ot", "Ni"]`
+6. If `suffixIndex` is from `1000` through `999998`, the supported range never exceeds a single higher group, so the canonical construction is:
+
+`getLargeSuffixChunk(floor(suffixIndex / 1000) - 1) + "Mi" + getSmallSuffixChunk(suffixIndex % 1000)`
+
+7. Inside the supported range, only the `Mi` tier token appears because `maxGroup` never exceeds `1` below `1e3000000`.
+
+`getLargeSuffixChunk(index)` first increments positive values by `1`, reduces values above `1000` modulo `1000`, and then returns `getSmallSuffixChunk(adjusted)`.
+
+## Name-to-Abbreviation Parity Rules
+
+Every documented example must resolve to one full name and one abbreviation. The parity rule is strict: if the full-name example appears in this document, the abbreviation example listed beside it is the only canonical shorthand for the same exponent.
+
+| Exponent | Full name | Abbreviation |
+|----------|-----------|--------------|
+| `10^3` | `Thousand` | `K` |
+| `10^6` | `Million` | `M` |
+| `10^33` | `Decillion` | `De` |
+| `10^3003` | `Millillion` | `Mi` |
+| `10^6003` | `Dumillillion` | `DMi` |
+
+No alternate abbreviations are canonical for these boundary cases.
+
+## Worked Abbreviation Examples
+
+- `10^3 -> K`
+- `10^6 -> M`
+- `10^33 -> De`
+- `10^3003 -> Mi`
+- `10^6003 -> DMi`
 
 
