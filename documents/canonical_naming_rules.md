@@ -1,41 +1,83 @@
 # Canonical Naming Rules for Infinite Number Formatter
 
-This document serves as the source of truth for the Infinite Number Formatter (`scripts.js`), formalizing the naming rules from $10^0$ up to $10^{2,999,999}$ (Tier 1, Tier 2, and above). This unifies the Conway-Wechsler system with our implementation.
+This document is the Phase 1 source of truth for the current formatter implementation in `templates/js/scripts.js`. It does not attempt to define every possible googology extension. It defines the exact naming behavior that the repository currently supports from `1e0` through `1e2999999` so later phases can test against one deterministic standard.
 
-## Tier 1 (1e0 to 1e30)
-- $10^0$: One
-- $10^3$: Thousand (k)
-- $10^6$: Million (M)
-- $10^9$: Billion (B)
-- $10^{12}$: Trillion (T)
-- $10^{15}$: Quadrillion (Qa)
-- $10^{18}$: Quintillion (Qi)
-- $10^{21}$: Sextillion (Sx)
-- $10^{24}$: Septillion (Sp)
-- $10^{27}$: Octillion (Oc)
-- $10^{30}$: Nonillion (No)
+## Scope and Supported Ceiling
 
-## Tier 2 (1e33 to 1e3000)
-Follows Conway-Wechsler conventions for illions. 
-Numbers use base roots combining Units, Tens, and Hundreds.
-1. **Units**: un(1), duo(2), tre(3), quattuor(4), quin(5), sex(6), septen(7), octo(8), novem(9)
-2. **Tens**: deci(10), viginti(20), triginta(30), quadraginta(40), quinquaginta(50), sexaginta(60), septuaginta(70), octoginta(80), nonaginta(90)
-3. **Hundreds**: centi(100), ducenti(200), trecenti(300), quadringenti(400), quingenti(500), sescenti(600), septingenti(700), octingenti(800), nongenti(900)
+The formatter derives a name group from the exponent using the exact runtime formula:
 
-Current logic exactly reconstructs the illion index $n$ into units and tens and adds an "illion" suffix.
+`suffixIndex = floor(exponent / 3) - 1`
 
-## Abbreviations Parity (1e0 up to 1e2999999)
-Abbreviation mappings match exactly to the established notation lengths and structure.
-For Tier 2, abbreviation is formed by taking up to three letters from the tier root.
-- Un -> U
-- Dec -> D
-- Cent -> C
-- Millillion (1e3003) -> Mi
-- Micrillion (1e3000003) -> Mc
+That yields the following project boundaries:
 
-### Extreme Edges
-- $10^{3003}$: `1 Mi` (1 Millillion)
-- $10^{6003}$: `1 DiMi` or `1 BiMi` depending on the tier base (We enforce `1 Ba` or `1 Plat` based on custom `scripts.js` rules). For exact edge examples: $10^{3003}$ uses "Millillion", and $10^{6003}$ uses "Platillion" or "Millillion" equivalent but for Tier 3 logic.
-- The standard enforces consistency up to `1e2999999`.
+- Exponents below `1e3` do not receive an `-illion` name and are treated as `Under a Thousand`.
+- Tier 1 covers suffix indices `0` through `999`.
+- Tier 2 covers suffix indices `1000` through `999998` within this project.
+- The maximum supported exponent in scope is `1e2999999`.
 
- 
+At the ceiling:
+
+- `suffixIndex = floor(2999999 / 3) - 1 = 999998`
+- `t2Index = floor(999998 / 1000) = 999`
+- `t1Index = 999998 % 1000 = 998`
+
+This means the supported range never requires a Tier 3 naming layer. `1e3000003` is out of scope for Phase 1, because that is where a third naming group would begin.
+
+## Tier 1 Reference Names
+
+The formatter uses the following direct names for the first ten groups:
+
+- `10^0` -> One
+- `10^3` -> Thousand
+- `10^6` -> Million
+- `10^9` -> Billion
+- `10^12` -> Trillion
+- `10^15` -> Quadrillion
+- `10^18` -> Quintillion
+- `10^21` -> Sextillion
+- `10^24` -> Septillion
+- `10^27` -> Octillion
+- `10^30` -> Nonillion
+
+For larger Tier 1 names, the formatter builds a Latin stem from these arrays in `templates/js/scripts.js`:
+
+- `units`: `Un`, `Duo`, `Tre`, `Quattuor`, `Quin`, `Sex`, `Septen`, `Octo`, `Novem`
+- `tens`: `Deci`, `Viginti`, `Triginta`, `Quadraginta`, `Quinquaginta`, `Sexaginta`, `Septuaginta`, `Octoginta`, `Nonaginta`
+- `hundreds`: `Centi`, `Ducenti`, `Trecenti`, `Quadringenti`, `Quingenti`, `Sescenti`, `Septingenti`, `Octingenti`, `Nongenti`
+
+The runtime concatenates unit, tens, and hundreds stems, normalizes repeated vowels with `.replace(/ii/g, "i").replace(/aa/g, "a").replace(/oo/g, "o").replace(/ao/g, "o")`, removes a trailing vowel if present, and then appends `illion`.
+
+## Canonical Full-Name Algorithm
+
+The canonical full-name behavior matches `getFullNameFromExponent(exponent)` exactly.
+
+1. If `exponent < 3`, the full-name category is `Under a Thousand`.
+2. Compute `suffixIndex = floor(exponent / 3) - 1`.
+3. If `suffixIndex < 1000`, return `getTier1Name(suffixIndex + 1)`.
+4. If `suffixIndex >= 1000`, split into:
+	- `t2Index = floor(suffixIndex / 1000)`
+	- `t1Index = suffixIndex % 1000`
+5. Build the Tier 2 prefix with `getMilliPrefix(t2Index)`:
+	- `t2Index === 1` -> `milli`
+	- `2` through `9` -> `milliOnes[t2Index] + "milli"`
+	- `10` and above -> `milliOnes[o] + tens[t].toLowerCase() + hundreds[h].toLowerCase() + "milli"`
+6. Build the suffix:
+	- if `t1Index === 0`, append `llion`
+	- otherwise append `getTier1Name(t1Index + 1).toLowerCase()`
+7. Capitalize the first character of the finished string.
+
+This is a two-layer system across the supported range. No Tier 3 naming is required inside project scope.
+
+## Worked Full-Name Examples
+
+- `10^3 -> Thousand`
+- `10^6 -> Million`
+- `10^33 -> Decillion`
+- `10^3003 -> Millillion`
+- `10^6003 -> Dumillillion`
+
+## Abbreviation Notes
+
+Abbreviations are defined separately from the full-name rules and must also follow the current formatter exactly. The next section of this document defines the canonical abbreviation algorithm and the parity examples used for verification.
+
+
