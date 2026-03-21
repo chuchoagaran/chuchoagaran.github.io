@@ -55,15 +55,15 @@ The canonical full-name behavior matches `getFullNameFromExponent(exponent)` exa
 2. Compute `suffixIndex = floor(exponent / 3) - 1`.
 3. If `suffixIndex < 1000`, return `getTier1Name(suffixIndex + 1)`.
 4. If `suffixIndex >= 1000`, split into:
-	- `t2Index = floor(suffixIndex / 1000)`
-	- `t1Index = suffixIndex % 1000`
+ - `t2Index = floor(suffixIndex / 1000)`
+ - `t1Index = suffixIndex % 1000`
 5. Build the Tier 2 prefix with `getMilliPrefix(t2Index)`:
-	- `t2Index === 1` -> `milli`
-	- `2` through `9` -> `milliOnes[t2Index] + "milli"`
-	- `10` and above -> `milliOnes[o] + tens[t].toLowerCase() + hundreds[h].toLowerCase() + "milli"`
+ - `t2Index === 1` -> `milli`
+ - `2` through `9` -> `milliOnes[t2Index] + "milli"`
+ - `10` and above -> `milliOnes[o] + tens[t].toLowerCase() + hundreds[h].toLowerCase() + "milli"`
 6. Build the suffix:
-	- if `t1Index === 0`, append `llion`
-	- otherwise append `getTier1Name(t1Index + 1).toLowerCase()`
+ - if `t1Index === 0`, append `llion`
+ - otherwise append `getTier1Name(t1Index + 1).toLowerCase()`
 7. Capitalize the first character of the finished string.
 
 This is a two-layer system across the supported range. No Tier 3 naming is required inside project scope.
@@ -84,18 +84,18 @@ The canonical abbreviation behavior matches `getLuaStyleAbbreviationSuffix(expon
 2. Compute `suffixIndex = floor(exponent / 3) - 1`.
 3. If `suffixIndex < 0`, the abbreviation suffix is empty.
 4. If `suffixIndex` is `0`, `1`, or `2`, use the direct short suffix table:
-	- `0 -> K`
-	- `1 -> M`
-	- `2 -> B`
+ - `0 -> K`
+ - `1 -> M`
+ - `2 -> B`
 5. If `suffixIndex` is from `3` through `999`, use `getSmallSuffixChunk(index)` built from:
-	- `firstOnes = ["", "U", "D", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No"]`
-	- `secondOnes = ["", "De", "Vt", "Tg", "qg", "Qg", "sg", "Sg", "Og", "Ng"]`
-	- `thirdOnes = ["", "Ce", "Du", "Tr", "Qa", "Qi", "Se", "Si", "Ot", "Ni"]`
+ - `firstOnes = ["", "U", "D", "T", "Qd", "Qn", "Sx", "Sp", "Oc", "No"]`
+ - `secondOnes = ["", "De", "Vt", "Tg", "qg", "Qg", "sg", "Sg", "Og", "Ng"]`
+ - `thirdOnes = ["", "Ce", "Du", "Tr", "Qa", "Qi", "Se", "Si", "Ot", "Ni"]`
 6. If `suffixIndex` is from `1000` through `999998`, the supported range never exceeds a single higher group, so the canonical construction is:
 
 `getLargeSuffixChunk(floor(suffixIndex / 1000) - 1) + "Mi" + getSmallSuffixChunk(suffixIndex % 1000)`
 
-7. Inside the supported range, only the `Mi` tier token appears because `maxGroup` never exceeds `1` below `1e3000000`.
+1. Inside the supported range, only the `Mi` tier token appears because `maxGroup` never exceeds `1` below `1e3000000`.
 
 `getLargeSuffixChunk(index)` first increments positive values by `1`, reduces values above `1000` modulo `1000`, and then returns `getSmallSuffixChunk(adjusted)`.
 
@@ -120,5 +120,3 @@ No alternate abbreviations are canonical for these boundary cases.
 - `10^33 -> De`
 - `10^3003 -> Mi`
 - `10^6003 -> DMi`
-
-
