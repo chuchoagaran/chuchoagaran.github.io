@@ -26,6 +26,7 @@ let failed = 0;
 const failures = [];
 const caseResults = [];
 const windowResults = [];
+const inputCaseResults = [];
 
 function log(message = '') {
     if (!jsonMode) {
@@ -130,6 +131,70 @@ function evaluateBoundaryWindow(windowSpec) {
     windowResults.push(result);
 }
 
+function buildInputValue(inputCase) {
+    if (inputCase.evaluationMode === 'suffix-derived-exponent') {
+        return null;
+    }
+
+    if (typeof inputCase.input === 'string') {
+        return inputCase.input;
+    }
+
+    if (inputCase.generatedInput && inputCase.generatedInput.kind === 'repeat-zero-suffix') {
+        return `${inputCase.generatedInput.leading}${'0'.repeat(inputCase.generatedInput.zeroCount)}${inputCase.generatedInput.suffix}`;
+    }
+
+    throw new Error(`Unsupported input case format for ${inputCase.id}`);
+}
+
+function getInputLabel(inputCase) {
+    if (inputCase.label) {
+        return inputCase.label;
+    }
+
+    if (typeof inputCase.input === 'string') {
+        return inputCase.input;
+    }
+
+    if (inputCase.generatedInput && inputCase.generatedInput.kind === 'repeat-zero-suffix') {
+        return `${inputCase.generatedInput.leading} + ${inputCase.generatedInput.zeroCount} zeros + ${inputCase.generatedInput.suffix}`;
+    }
+
+    return inputCase.id;
+}
+
+function evaluateInputCase(inputCase) {
+    const rawInput = buildInputValue(inputCase);
+    const actual = inputCase.evaluationMode === 'suffix-derived-exponent'
+        ? formatter.validateExponentValue(inputCase.derivedExponent)
+        : formatter.convertInput(rawInput);
+    const result = {
+        id: inputCase.id,
+        inputLabel: getInputLabel(inputCase),
+        ok: actual.ok,
+        passed: true
+    };
+
+    result.passed = assertEqual(actual.ok, inputCase.expectedOk, `${inputCase.id} ok`, { id: inputCase.id, field: 'ok' }) && result.passed;
+
+    if (inputCase.expectedOk) {
+        result.normalized = actual.normalized;
+        result.exponent = actual.exponent;
+        result.fullText = actual.fullText;
+        result.abbreviation = actual.abbreviation;
+
+        result.passed = assertEqual(actual.normalized, inputCase.expectedNormalized, `${inputCase.id} normalized`, { id: inputCase.id, field: 'normalized' }) && result.passed;
+        result.passed = assertEqual(actual.exponent, inputCase.expectedExponent, `${inputCase.id} exponent`, { id: inputCase.id, field: 'exponent' }) && result.passed;
+        result.passed = assertEqual(actual.fullText, inputCase.expectedFullText, `${inputCase.id} full text`, { id: inputCase.id, field: 'fullText' }) && result.passed;
+        result.passed = assertEqual(actual.abbreviation, inputCase.expectedAbbreviation, `${inputCase.id} abbreviation text`, { id: inputCase.id, field: 'abbreviation' }) && result.passed;
+    } else {
+        result.error = actual.error;
+        result.passed = assertEqual(actual.error, inputCase.expectedError, `${inputCase.id} error`, { id: inputCase.id, field: 'error' }) && result.passed;
+    }
+
+    inputCaseResults.push(result);
+}
+
 function printSampleRanges() {
     section('Sample range snapshots');
 
@@ -151,6 +216,11 @@ function main() {
     section('Boundary window uniqueness');
     fixtures.boundaryWindows.forEach(evaluateBoundaryWindow);
 
+    if (Array.isArray(fixtures.inputCases)) {
+        section('Input and bounds cases');
+        fixtures.inputCases.forEach(evaluateInputCase);
+    }
+
     if (!jsonMode) {
         printSampleRanges();
         section('Summary');
@@ -164,6 +234,7 @@ function main() {
             failed,
             caseResults,
             windowResults,
+            inputCaseResults,
             failures
         }));
     }

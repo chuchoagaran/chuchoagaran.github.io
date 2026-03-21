@@ -1,114 +1,151 @@
 {
-  "schemaVersion": 1,
-  "cases": [
-    {
-      "id": "e3",
-      "mantissa": 1,
-      "exponent": 3,
-      "expectedFullName": "Thousand",
-      "expectedAbbreviation": "K",
-      "expectedReadableText": "1 Thousand",
-      "expectedAbbreviationText": "1 K"
-    },
-    {
-      "id": "e6",
-      "mantissa": 1,
-      "exponent": 6,
-      "expectedFullName": "Million",
-      "expectedAbbreviation": "M",
-      "expectedReadableText": "1 Million",
-      "expectedAbbreviationText": "1 M"
-    },
-    {
-      "id": "e33",
-      "mantissa": 1,
-      "exponent": 33,
-      "expectedFullName": "Decillion",
-      "expectedAbbreviation": "De",
-      "expectedReadableText": "1 Decillion",
-      "expectedAbbreviationText": "1 De"
-    },
-    {
-      "id": "e3003",
-      "mantissa": 1,
-      "exponent": 3003,
-      "expectedFullName": "Millillion",
-      "expectedAbbreviation": "Mi",
-      "expectedReadableText": "1 Millillion",
-      "expectedAbbreviationText": "1 Mi"
-    },
-    {
-      "id": "e3006",
-      "mantissa": 1,
-      "exponent": 3006,
-      "expectedFullName": "Millimillion",
-      "expectedAbbreviation": "MiU",
-      "expectedReadableText": "1 Millimillion",
-      "expectedAbbreviationText": "1 MiU"
-    },
-    {
-      "id": "e6003",
-      "mantissa": 1,
-      "exponent": 6003,
-      "expectedFullName": "Dumillillion",
-      "expectedAbbreviation": "DMi",
-      "expectedReadableText": "1 Dumillillion",
-      "expectedAbbreviationText": "1 DMi"
-    },
-    {
-      "id": "normalization-e3005",
-      "mantissa": 1,
-      "exponent": 3005,
-      "expectedFullName": "Millillion",
-      "expectedAbbreviation": "Mi",
-      "expectedReadableText": "100 Millillion",
-      "expectedAbbreviationText": "100 Mi"
-    }
-  ],
-  "boundaryWindows": [
-    {
-      "id": "tier1-to-tier2",
-      "startExponent": 2994,
-      "endExponent": 3015,
-      "step": 3
-    },
-    {
-      "id": "dumilli-boundary",
-      "startExponent": 5994,
-      "endExponent": 6015,
-      "step": 3
-    },
-    {
-      "id": "trimilli-boundary",
-      "startExponent": 8994,
-      "endExponent": 9015,
-      "step": 3
-    },
-    {
-      "id": "decimilli-boundary",
-      "startExponent": 29994,
-      "endExponent": 30015,
-      "step": 3
-    }
-  ],
-  "sampleRanges": [
-    {
-      "id": "under-1000-band",
-      "startExponent": 3,
-      "endExponent": 999,
-      "step": 30
-    },
-    {
-      "id": "first-tier2-band",
-      "startExponent": 2970,
-      "endExponent": 3300,
-      "step": 3
-    },
-    {
-      "id": "high-sparse-band",
-      "startExponent": 100000,
-      "endExponent": 1000000,
-      "step": 3000
-    }
-  ]
+    "schemaVersion": 1,
+    "cases": [
+        {
+            "id": "e3",
+            "mantissa": 1,
+            "exponent": 3,
+            "expectedFullName": "Thousand",
+            "expectedAbbreviation": "K",
+            "expectedReadableText": "1 Thousand",
+            "expectedAbbreviationText": "1 K"
+        },
+        {
+            "id": "e6",
+            "mantissa": 1,
+            "exponent": 6,
+            "expectedFullName": "Million",
+            "expectedAbbreviation": "M",
+            "expectedReadableText": "1 Million",
+            "expectedAbbreviationText": "1 M"
+        },
+        {
+            "id": "e33",
+            "mantissa": 1,
+            "exponent": 33,
+            "expectedFullName": "Decillion",
+            "expectedAbbreviation": "De",
+            "expectedReadableText": "1 Decillion",
+            "expectedAbbreviationText": "1 De"
+        },
+        {
+            "id": "e3003",
+            "mantissa": 1,
+            "exponent": 3003,
+            "expectedFullName": "Millillion",
+            "expectedAbbreviation": "Mi",
+            "expectedReadableText": "1 Millillion",
+            "expectedAbbreviationText": "1 Mi"
+        },
+        {
+            "id": "e3006",
+            "mantissa": 1,
+            "exponent": 3006,
+            "expectedFullName": "Millimillion",
+            "expectedAbbreviation": "MiU",
+            "expectedReadableText": "1 Millimillion",
+            "expectedAbbreviationText": "1 MiU"
+        },
+        {
+            "id": "e6003",
+            "mantissa": 1,
+            "exponent": 6003,
+            "expectedFullName": "Dumillillion",
+            "expectedAbbreviation": "DMi",
+            "expectedReadableText": "1 Dumillillion",
+            "expectedAbbreviationText": "1 DMi"
+        },
+        {
+            "id": "normalization-e3005",
+            "mantissa": 1,
+            "exponent": 3005,
+            "expectedFullName": "Millillion",
+            "expectedAbbreviation": "Mi",
+            "expectedReadableText": "100 Millillion",
+            "expectedAbbreviationText": "100 Mi"
+        }
+    ],
+    "boundaryWindows": [
+        {
+            "id": "tier1-to-tier2",
+            "startExponent": 2994,
+            "endExponent": 3015,
+            "step": 3
+        },
+        {
+            "id": "dumilli-boundary",
+            "startExponent": 5994,
+            "endExponent": 6015,
+            "step": 3
+        },
+        {
+            "id": "trimilli-boundary",
+            "startExponent": 8994,
+            "endExponent": 9015,
+            "step": 3
+        },
+        {
+            "id": "decimilli-boundary",
+            "startExponent": 29994,
+            "endExponent": 30015,
+            "step": 3
+        }
+    ],
+    "sampleRanges": [
+        {
+            "id": "under-1000-band",
+            "startExponent": 3,
+            "endExponent": 999,
+            "step": 30
+        },
+        {
+            "id": "first-tier2-band",
+            "startExponent": 2970,
+            "endExponent": 3300,
+            "step": 3
+        },
+        {
+            "id": "high-sparse-band",
+            "startExponent": 100000,
+            "endExponent": 1000000,
+            "step": 3000
+        }
+    ],
+    "inputCases": [
+        {
+            "id": "scientific-max-supported",
+            "input": "1e2999999",
+            "expectedOk": true,
+            "expectedNormalized": "1e2999999",
+            "expectedExponent": 2999999,
+            "expectedFullText": "100 Noninonagintanongentimillioctononagintanongentillion",
+            "expectedAbbreviation": "100 NoNgNiMiOcNgNi"
+        },
+        {
+            "id": "scientific-out-of-range",
+            "input": "1e3000000",
+            "expectedOk": false,
+            "expectedError": "Maximum supported exponent is 2999999."
+        },
+        {
+            "id": "scientific-unsafe-exponent",
+            "input": "1e9007199254740992",
+            "expectedOk": false,
+            "expectedError": "Exponent must be a safe integer."
+        },
+        {
+            "id": "scientific-malformed-exponent",
+            "input": "1e2.5",
+            "expectedOk": false,
+            "expectedError": "Unsupported format. Examples: 1e1920, 388Qn, 1Qa"
+        },
+        {
+            "id": "suffix-derived-out-of-range",
+            "label": "1 + 2999985 zeros + Qa",
+            "evaluationMode": "suffix-derived-exponent",
+            "derivedExponent": 3000000,
+            "expectedOk": false,
+            "expectedError": "Maximum supported exponent is 2999999."
+        }
+    ]
 }

@@ -33,6 +33,69 @@ class InfiniteNumberFormatter {
         // Latin ones-place prefixes for building milli-tier compound names
         // e.g. index 2 → "du" + "milli" = "dumilli" → "Dumillillion"
         this.milliOnes = ["", "un", "du", "tri", "quadri", "quin", "sex", "septi", "octi", "noni"];
+        this.maxSupportedExponent = 2999999;
+        this.maxSafeInteger = BigInt(Number.MAX_SAFE_INTEGER);
+    }
+
+    getSupportedExponentError() {
+        return `Maximum supported exponent is ${this.maxSupportedExponent}.`;
+    }
+
+    parseIntegerString(rawValue) {
+        if (!/^[+-]?\d+$/.test(rawValue)) {
+            return null;
+        }
+
+        return BigInt(rawValue);
+    }
+
+    validateExponentValue(exponentValue) {
+        if (typeof exponentValue !== "number" || !Number.isInteger(exponentValue)) {
+            return { ok: false, error: "Invalid scientific notation." };
+        }
+
+        if (!Number.isSafeInteger(exponentValue)) {
+            return { ok: false, error: "Exponent must be a safe integer." };
+        }
+
+        if (exponentValue > this.maxSupportedExponent) {
+            return { ok: false, error: this.getSupportedExponentError() };
+        }
+
+        return { ok: true, exponent: exponentValue };
+    }
+
+    validateScientificExponent(rawExponent) {
+        const parsedExponent = this.parseIntegerString(rawExponent);
+
+        if (parsedExponent === null) {
+            return { ok: false, error: "Invalid scientific notation." };
+        }
+
+        if (parsedExponent > this.maxSafeInteger || parsedExponent < -this.maxSafeInteger) {
+            return { ok: false, error: "Exponent must be a safe integer." };
+        }
+
+        return this.validateExponentValue(Number(parsedExponent));
+    }
+
+    getMantissaBase10Exponent(rawMantissa) {
+        const unsignedMantissa = rawMantissa.replace(/^[+-]/, "");
+        const parts = unsignedMantissa.split(".");
+        const integerPart = parts[0] || "";
+        const fractionalPart = parts[1] || "";
+        const trimmedIntegerPart = integerPart.replace(/^0+/, "");
+
+        if (trimmedIntegerPart.length > 0) {
+            return trimmedIntegerPart.length - 1;
+        }
+
+        const firstNonZeroIndex = fractionalPart.search(/[1-9]/);
+        if (firstNonZeroIndex === -1) {
+            return 0;
+        }
+
+        return -(firstNonZeroIndex + 1);
     }
 
     getSuffixIndexFromExponent(exponent) {
@@ -266,28 +329,29 @@ class InfiniteNumberFormatter {
         const scientificMatch = input.match(/^([+-]?\d*\.?\d+)\s*[eE]\s*([+-]?\d+)$/);
         if (scientificMatch) {
             const mantissa = Number(scientificMatch[1]);
-            const exponent = Number(scientificMatch[2]);
+            const exponentValidation = this.validateScientificExponent(scientificMatch[2]);
 
-            if (!Number.isFinite(mantissa) || !Number.isInteger(exponent)) {
+            if (!Number.isFinite(mantissa)) {
                 return { ok: false, error: "Invalid scientific notation." };
+            }
+
+            if (!exponentValidation.ok) {
+                return { ok: false, error: exponentValidation.error };
             }
 
             return {
                 ok: true,
                 mantissa,
-                exponent,
-                normalized: `${mantissa}e${exponent}`
+                exponent: exponentValidation.exponent,
+                normalized: `${mantissa}e${exponentValidation.exponent}`
             };
         }
 
         const suffixMatch = input.match(/^([+-]?\d*\.?\d+)\s*([a-zA-Z]{1,3})$/);
         if (suffixMatch) {
+            const rawMantissa = suffixMatch[1];
             const mantissa = Number(suffixMatch[1]);
             const suffixInput = suffixMatch[2].toLowerCase();
-
-            if (!Number.isFinite(mantissa)) {
-                return { ok: false, error: "Invalid number before suffix." };
-            }
 
             const suffixTable = {
                 k: { group: 1, label: "K" },
@@ -312,13 +376,21 @@ class InfiniteNumberFormatter {
                 };
             }
 
-            const mantissaExponent = mantissa === 0 ? 0 : Math.floor(Math.log10(Math.abs(mantissa)));
-            const exponent = suffixInfo.group * 3 + mantissaExponent;
+            const mantissaExponent = this.getMantissaBase10Exponent(rawMantissa);
+            const exponentValidation = this.validateExponentValue(suffixInfo.group * 3 + mantissaExponent);
+
+            if (!exponentValidation.ok) {
+                return { ok: false, error: exponentValidation.error };
+            }
+
+            if (!Number.isFinite(mantissa)) {
+                return { ok: false, error: "Invalid number before suffix." };
+            }
 
             return {
                 ok: true,
                 mantissa,
-                exponent,
+                exponent: exponentValidation.exponent,
                 normalized: `${mantissa}${suffixInfo.label}`
             };
         }
