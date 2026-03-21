@@ -18,9 +18,9 @@
 
 ### Verification Suite
 
-- [ ] **TEST-01**: Extensive snapshot boundary/invariant tests created (JS and/or Python) proving full naming logic accuracy.
-- [ ] **TEST-02**: Extensive snapshot boundary/invariant tests proving full abbreviation mapping accuracy.
-- [ ] **TEST-03**: Cross-language script parity (Python helper vs JS implementation) is established and automated to prevent drift.
+- [x] **TEST-01**: Extensive snapshot boundary/invariant tests created (JS and/or Python) proving full naming logic accuracy.
+- [x] **TEST-02**: Extensive snapshot boundary/invariant tests proving full abbreviation mapping accuracy.
+- [x] **TEST-03**: Cross-language script parity (Python helper vs JS implementation) is established and automated to prevent drift.
 
 ## Out of Scope
 
@@ -35,9 +35,9 @@
 |-------------|-------|--------|
 | DOC-01 | Phase 1 | Complete |
 | DOC-02 | Phase 1 | Complete |
-| TEST-01 | Phase 2 | Pending |
-| TEST-02 | Phase 2 | Pending |
-| TEST-03 | Phase 2 | Pending |
+| TEST-01 | Phase 2 | Complete |
+| TEST-02 | Phase 2 | Complete |
+| TEST-03 | Phase 2 | Complete |
 | FMT-01 | Phase 3 | Pending |
 | FMT-02 | Phase 3 | Pending |
 | FMT-03 | Phase 3 | Pending |
