@@ -75,6 +75,15 @@ class InfiniteNumberFormatter {
         };
     }
 
+    getNormalizedFormatterState(mantissa, exponent) {
+        const displayValue = this.getDisplayValueParts(mantissa, exponent);
+
+        return {
+            ...displayValue,
+            groupInfo: this.getGroupInfoFromExponent(displayValue.exponent)
+        };
+    }
+
     // Handles the core 10 to 999 combinations
     getTier1Name(index) {
         if (index <= 10) return this.basics[index] || "Decillion";
@@ -119,10 +128,7 @@ class InfiniteNumberFormatter {
         return prefix + "milli";
     }
 
-    // Handles going "Infinite" by combining Tier 2 with Tier 1
-    getFullNameFromExponent(exponent) {
-        const groupInfo = this.getGroupInfoFromExponent(exponent);
-
+    getFullNameFromGroupInfo(groupInfo) {
         if (groupInfo.isUnderThousand) return "Under a Thousand";
 
         if (groupInfo.isTier1) return this.getTier1Name(groupInfo.suffixIndex + 1);
@@ -142,6 +148,11 @@ class InfiniteNumberFormatter {
         return name.charAt(0).toUpperCase() + name.slice(1);
     }
 
+    // Handles going "Infinite" by combining Tier 2 with Tier 1
+    getFullNameFromExponent(exponent) {
+        return this.getFullNameFromGroupInfo(this.getGroupInfoFromExponent(exponent));
+    }
+
     normalizeDisplayValue(mantissa, exponent) {
         let adjustedExponent = exponent;
         let displayMantissa = mantissa * (10 ** (adjustedExponent % 3));
@@ -156,14 +167,14 @@ class InfiniteNumberFormatter {
     }
 
     buildReadableText(mantissa, exponent) {
-        const displayValue = this.getDisplayValueParts(mantissa, exponent);
+        const formatterState = this.getNormalizedFormatterState(mantissa, exponent);
 
-        if (displayValue.exponent < 3) {
-            return `${displayValue.displayMantissa} (under a thousand)`;
+        if (formatterState.groupInfo.isUnderThousand) {
+            return `${formatterState.displayMantissa} (under a thousand)`;
         }
 
-        const name = this.getFullNameFromExponent(displayValue.exponent);
-        return `${displayValue.displayMantissa} ${name}`;
+        const name = this.getFullNameFromGroupInfo(formatterState.groupInfo);
+        return `${formatterState.displayMantissa} ${name}`;
     }
 
     getSmallSuffixChunk(index) {
@@ -185,9 +196,7 @@ class InfiniteNumberFormatter {
         return this.getSmallSuffixChunk(adjusted);
     }
 
-    getLuaStyleAbbreviationSuffix(exponent) {
-        const groupInfo = this.getGroupInfoFromExponent(exponent);
-
+    getAbbreviationFromGroupInfo(groupInfo) {
         if (groupInfo.isUnderThousand) {
             return "";
         }
@@ -227,20 +236,24 @@ class InfiniteNumberFormatter {
         return out || `T${originalIndex}`;
     }
 
+    getLuaStyleAbbreviationSuffix(exponent) {
+        return this.getAbbreviationFromGroupInfo(this.getGroupInfoFromExponent(exponent));
+    }
+
     getAbbreviationFromExponent(exponent) {
         return this.getLuaStyleAbbreviationSuffix(exponent);
     }
 
     buildAbbreviationText(mantissa, exponent) {
-        const displayValue = this.getDisplayValueParts(mantissa, exponent);
+        const formatterState = this.getNormalizedFormatterState(mantissa, exponent);
 
-        const suffix = this.getAbbreviationFromExponent(displayValue.exponent);
+        const suffix = this.getAbbreviationFromGroupInfo(formatterState.groupInfo);
 
         if (!suffix) {
-            return `${displayValue.displayMantissa}`;
+            return `${formatterState.displayMantissa}`;
         }
 
-        return `${displayValue.displayMantissa} ${suffix}`;
+        return `${formatterState.displayMantissa} ${suffix}`;
     }
 
     parseNotationInput(rawInput) {
