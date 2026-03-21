@@ -98,6 +98,66 @@ class InfiniteNumberFormatter {
         return -(firstNonZeroIndex + 1);
     }
 
+    getSuffixInfo(suffixInput) {
+        const suffixTable = {
+            k: { group: 1, label: "K" },
+            m: { group: 2, label: "M" },
+            b: { group: 3, label: "B" },
+            t: { group: 4, label: "T" },
+            qa: { group: 5, label: "Qa" },
+            qt: { group: 6, label: "Qt" },
+            qn: { group: 6, label: "Qn" },
+            sx: { group: 7, label: "Sx" },
+            sp: { group: 8, label: "Sp" },
+            oc: { group: 9, label: "Oc" },
+            no: { group: 10, label: "No" },
+            dc: { group: 11, label: "Dc" }
+        };
+
+        return suffixTable[suffixInput] || null;
+    }
+
+    parseScientificInput(rawMantissa, rawExponent) {
+        const mantissa = Number(rawMantissa);
+        const exponentValidation = this.validateScientificExponent(rawExponent);
+
+        if (!Number.isFinite(mantissa)) {
+            return { ok: false, error: "Invalid scientific notation." };
+        }
+
+        if (!exponentValidation.ok) {
+            return { ok: false, error: exponentValidation.error };
+        }
+
+        return {
+            ok: true,
+            mantissa,
+            exponent: exponentValidation.exponent,
+            normalized: `${mantissa}e${exponentValidation.exponent}`
+        };
+    }
+
+    parseSuffixInput(rawMantissa, suffixInfo) {
+        const mantissaExponent = this.getMantissaBase10Exponent(rawMantissa);
+        const exponentValidation = this.validateExponentValue(suffixInfo.group * 3 + mantissaExponent);
+
+        if (!exponentValidation.ok) {
+            return { ok: false, error: exponentValidation.error };
+        }
+
+        const mantissa = Number(rawMantissa);
+        if (!Number.isFinite(mantissa)) {
+            return { ok: false, error: "Invalid number before suffix." };
+        }
+
+        return {
+            ok: true,
+            mantissa,
+            exponent: exponentValidation.exponent,
+            normalized: `${mantissa}${suffixInfo.label}`
+        };
+    }
+
     getSuffixIndexFromExponent(exponent) {
         if (exponent < 3) {
             return -1;
@@ -328,47 +388,15 @@ class InfiniteNumberFormatter {
 
         const scientificMatch = input.match(/^([+-]?\d*\.?\d+)\s*[eE]\s*([+-]?\d+)$/);
         if (scientificMatch) {
-            const mantissa = Number(scientificMatch[1]);
-            const exponentValidation = this.validateScientificExponent(scientificMatch[2]);
-
-            if (!Number.isFinite(mantissa)) {
-                return { ok: false, error: "Invalid scientific notation." };
-            }
-
-            if (!exponentValidation.ok) {
-                return { ok: false, error: exponentValidation.error };
-            }
-
-            return {
-                ok: true,
-                mantissa,
-                exponent: exponentValidation.exponent,
-                normalized: `${mantissa}e${exponentValidation.exponent}`
-            };
+            return this.parseScientificInput(scientificMatch[1], scientificMatch[2]);
         }
 
         const suffixMatch = input.match(/^([+-]?\d*\.?\d+)\s*([a-zA-Z]{1,3})$/);
         if (suffixMatch) {
             const rawMantissa = suffixMatch[1];
-            const mantissa = Number(suffixMatch[1]);
             const suffixInput = suffixMatch[2].toLowerCase();
 
-            const suffixTable = {
-                k: { group: 1, label: "K" },
-                m: { group: 2, label: "M" },
-                b: { group: 3, label: "B" },
-                t: { group: 4, label: "T" },
-                qa: { group: 5, label: "Qa" },
-                qt: { group: 6, label: "Qt" },
-                qn: { group: 6, label: "Qn" },
-                sx: { group: 7, label: "Sx" },
-                sp: { group: 8, label: "Sp" },
-                oc: { group: 9, label: "Oc" },
-                no: { group: 10, label: "No" },
-                dc: { group: 11, label: "Dc" }
-            };
-
-            const suffixInfo = suffixTable[suffixInput];
+            const suffixInfo = this.getSuffixInfo(suffixInput);
             if (!suffixInfo) {
                 return {
                     ok: false,
@@ -376,23 +404,7 @@ class InfiniteNumberFormatter {
                 };
             }
 
-            const mantissaExponent = this.getMantissaBase10Exponent(rawMantissa);
-            const exponentValidation = this.validateExponentValue(suffixInfo.group * 3 + mantissaExponent);
-
-            if (!exponentValidation.ok) {
-                return { ok: false, error: exponentValidation.error };
-            }
-
-            if (!Number.isFinite(mantissa)) {
-                return { ok: false, error: "Invalid number before suffix." };
-            }
-
-            return {
-                ok: true,
-                mantissa,
-                exponent: exponentValidation.exponent,
-                normalized: `${mantissa}${suffixInfo.label}`
-            };
+            return this.parseSuffixInput(rawMantissa, suffixInfo);
         }
 
         return {
