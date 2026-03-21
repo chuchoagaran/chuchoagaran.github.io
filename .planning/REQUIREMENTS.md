@@ -7,8 +7,8 @@
 
 ### Documentation and Alignment
 
-- [ ] **DOC-01**: Formally catalog the canonical source of truth logic for naming numbers up to `1e2999999`, consulting Googology wiki.
-- [ ] **DOC-02**: Establish rules for suffixes/abbreviations to strictly match the canonical names.
+- [x] **DOC-01**: Formally catalog the canonical source of truth logic for naming numbers up to `1e2999999`, consulting Googology wiki.
+- [x] **DOC-02**: Establish rules for suffixes/abbreviations to strictly match the canonical names.
 
 ### Formatting Logic (JS)
 
@@ -33,8 +33,8 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DOC-01 | Phase 1 | Pending |
-| DOC-02 | Phase 1 | Pending |
+| DOC-01 | Phase 1 | Complete |
+| DOC-02 | Phase 1 | Complete |
 | TEST-01 | Phase 2 | Pending |
 | TEST-02 | Phase 2 | Pending |
 | TEST-03 | Phase 2 | Pending |

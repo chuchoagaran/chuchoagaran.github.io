@@ -6,8 +6,8 @@
 **Goal:** Formalize the canonical logic and expected outcomes to fix against.
 **Requirements:** `[DOC-01, DOC-02]`
 **Plans:** 2 plans
-- [ ] 01-01-PLAN.md — Formalize naming logic and expected abbreviations
-- [ ] 01-02-PLAN.md — Close canonical naming and abbreviation verification gaps
+- [x] 01-01-PLAN.md — Formalize naming logic and expected abbreviations
+- [x] 01-02-PLAN.md — Close canonical naming and abbreviation verification gaps
 
 ## Phase 2: Test Harness Construction
 **Goal:** Establish extensive JS snapshot invariants that can prove behavior deterministically across the boundary edge cases.
