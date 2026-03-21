@@ -12,9 +12,9 @@
 
 ### Formatting Logic (JS)
 
-- [ ] **FMT-01**: `InfiniteNumberFormatter` matches canonical naming standard for all exponents `1e0` - `1e2999999`
-- [ ] **FMT-02**: `InfiniteNumberFormatter` matches canonical abbreviation standard for all exponents `1e0` - `1e2999999`
-- [ ] **FMT-03**: Safe integer bounds are enforced during formatting string generation, mitigating float overflow risks.
+- [x] **FMT-01**: `InfiniteNumberFormatter` matches canonical naming standard for all exponents `1e0` - `1e2999999`
+- [x] **FMT-02**: `InfiniteNumberFormatter` matches canonical abbreviation standard for all exponents `1e0` - `1e2999999`
+- [x] **FMT-03**: Safe integer bounds are enforced during formatting string generation, mitigating float overflow risks.
 
 ### Verification Suite
 
@@ -38,9 +38,9 @@
 | TEST-01 | Phase 2 | Complete |
 | TEST-02 | Phase 2 | Complete |
 | TEST-03 | Phase 2 | Complete |
-| FMT-01 | Phase 3 | Pending |
-| FMT-02 | Phase 3 | Pending |
-| FMT-03 | Phase 3 | Pending |
+| FMT-01 | Phase 3 | Complete |
+| FMT-02 | Phase 3 | Complete |
+| FMT-03 | Phase 3 | Complete |
 
 ---
 *Requirements defined: 2026-03-20*
