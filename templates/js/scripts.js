@@ -409,7 +409,7 @@ class InfiniteNumberFormatter {
 
         return {
             ok: false,
-            error: "Unsupported format. Examples: 1e1920, 388Qn, 1Qa"
+            error: "Unsupported format. Examples: 1e1920, 1e19346"
         };
     }
 
